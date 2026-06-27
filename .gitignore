@@ -23,4 +23,7 @@ Thumbs.db
 .vscode/*
 !.vscode/extensions.json
 
+# Claude Code — personal/local overrides stay local; shared config + skills are committed
+.claude/settings.local.json
+
 # Note: backend/ has its own .gitignore (vendor/, etc.)
