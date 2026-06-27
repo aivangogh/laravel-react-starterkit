@@ -1,0 +1,31 @@
+{
+  "name": "laravel-vue-starterkit",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.33.2",
+  "engines": {
+    "node": ">=22.12.0",
+    "pnpm": ">=10"
+  },
+  "scripts": {
+    "dev": "concurrently --kill-others-on-fail --names api,web --prefix-colors blue,cyan \"pnpm dev:api\" \"pnpm dev:web\"",
+    "dev:api": "cd backend && php artisan serve",
+    "dev:web": "pnpm --filter web dev",
+    "build": "pnpm -r --filter \"./apps/*\" --filter \"./packages/*\" build",
+    "lint": "pnpm -r --parallel --filter \"./apps/*\" --filter \"./packages/*\" lint",
+    "format": "pnpm -r --parallel --filter \"./apps/*\" --filter \"./packages/*\" format",
+    "type-check": "pnpm -r --parallel --filter \"./apps/*\" --filter \"./packages/*\" type-check",
+    "test:unit": "pnpm --filter web test:unit",
+    "test:e2e": "pnpm --filter web test:e2e",
+    "db:up": "docker compose --env-file ./backend/.env up -d --wait postgres redis",
+    "db:down": "docker compose --env-file ./backend/.env down",
+    "db:logs": "docker compose --env-file ./backend/.env logs -f postgres redis",
+    "db:reset": "docker compose --env-file ./backend/.env down -v && pnpm db:up",
+    "db:migrate": "cd backend && php artisan migrate"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.3",
+    "typescript": "^6.0.3"
+  }
+}

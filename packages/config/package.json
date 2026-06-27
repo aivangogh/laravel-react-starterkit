@@ -1,0 +1,26 @@
+{
+  "name": "@app/config",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./eslint": "./eslint.base.mjs",
+    "./prettier": "./prettier.base.json",
+    "./tsconfig.base.json": "./tsconfig.base.json",
+    "./tsconfig.vue.json": "./tsconfig.vue.json"
+  },
+  "scripts": {
+    "build": "echo \"(noop) @app/config\"",
+    "lint": "echo \"(noop) @app/config\"",
+    "format": "echo \"(noop) @app/config\"",
+    "type-check": "echo \"(noop) @app/config\""
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.6.0",
+    "eslint-plugin-vue": "^10.9.2",
+    "globals": "^17.7.0",
+    "prettier": "^3.9.0",
+    "typescript-eslint": "^8.62.0"
+  }
+}

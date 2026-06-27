@@ -1,0 +1,26 @@
+{
+  "name": "@app/ui",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "ui:add": "shadcn-vue add",
+    "build": "echo \"(noop) @app/ui — consumed as source via the @app/ui path alias\"",
+    "lint": "echo \"(noop) @app/ui\"",
+    "format": "echo \"(noop) @app/ui\"",
+    "type-check": "echo \"(noop) @app/ui\""
+  },
+  "peerDependencies": {
+    "vue": "^3.5.0"
+  },
+  "dependencies": {
+    "clsx": "^2.1.1",
+    "lucide-vue-next": "^1.0.0",
+    "tailwind-merge": "^3.6.0"
+  },
+  "devDependencies": {
+    "@app/config": "workspace:*",
+    "shadcn-vue": "^2.7.4",
+    "typescript": "^6.0.3"
+  }
+}
