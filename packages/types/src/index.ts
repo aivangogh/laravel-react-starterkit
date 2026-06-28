@@ -50,4 +50,19 @@ export interface User {
   created_at: IsoDateTime
 }
 
+/** A Spatie activity-log entry. `subject`/`causer` are flat morph type+id pairs. */
+export interface Activity {
+  id: number
+  log_name: string | null
+  description: string
+  event: string | null
+  subject_type: string | null
+  subject_id: Uuid | null
+  causer_type: string | null
+  causer_id: Uuid | null
+  attribute_changes: Record<string, unknown> | null
+  properties: Record<string, unknown> | null
+  created_at: IsoDateTime
+}
+
 export * from './generated'

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\ActivityLogController;
 use App\Http\Controllers\Api\PermissionController;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\UserController;
@@ -33,6 +34,11 @@ Route::middleware('auth:sanctum')->group(function () {
     // controller. Permissions are a read-only catalogue (index only).
     Route::apiResource('roles', RoleController::class);
     Route::apiResource('permissions', PermissionController::class)->only(['index']);
+
+    // Activity log — read-only, filterable, paginated. Gated by activity.view
+    // in the controller. Written by models (LogsActivity), never via the API.
+    Route::get('activity-log', [ActivityLogController::class, 'index']);
+    Route::get('activity-log/{activity}', [ActivityLogController::class, 'show']);
 });
 
 /*
