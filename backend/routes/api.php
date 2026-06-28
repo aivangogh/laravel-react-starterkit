@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\UserController;
 use App\Http\Resources\UserResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -20,6 +21,11 @@ Route::middleware('auth:sanctum')->group(function () {
     // The authenticated user ("me"). Returns roles + flattened permissions
     // so the SPA can gate its UI. Matches the shared `User` type.
     Route::get('/user', fn (Request $request) => new UserResource($request->user()));
+
+    // Users management (CRUD + role assignment). Per-action permission gates
+    // (users.view|create|update|delete) are declared in the controller via
+    // HasMiddleware — see UserController::middleware().
+    Route::apiResource('users', UserController::class);
 });
 
 /*
