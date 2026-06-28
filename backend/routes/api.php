@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Api\PermissionController;
+use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Resources\UserResource;
 use Illuminate\Http\Request;
@@ -26,6 +28,11 @@ Route::middleware('auth:sanctum')->group(function () {
     // (users.view|create|update|delete) are declared in the controller via
     // HasMiddleware — see UserController::middleware().
     Route::apiResource('users', UserController::class);
+
+    // Roles management (CRUD + permission sync), gated by roles.* in the
+    // controller. Permissions are a read-only catalogue (index only).
+    Route::apiResource('roles', RoleController::class);
+    Route::apiResource('permissions', PermissionController::class)->only(['index']);
 });
 
 /*
