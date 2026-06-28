@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -17,13 +18,17 @@ use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable implements HasMedia
 {
+    use HasApiTokens;
+
     /** @use HasFactory<UserFactory> */
     use HasFactory;
-    use Notifiable;
-    use HasApiTokens;
     use HasRoles;
-    use LogsActivity;
+    // UUID primary key (PRISM parity). HasUuids sets keyType=string,
+    // incrementing=false and generates an ordered UUID on create.
+    use HasUuids;
     use InteractsWithMedia;
+    use LogsActivity;
+    use Notifiable;
     use TwoFactorAuthenticatable;
 
     /**

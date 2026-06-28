@@ -2,11 +2,11 @@
 
 namespace Tests\Feature\Api;
 
+use App\Models\Permission;
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Route;
-use Spatie\Permission\Models\Permission;
-use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 class ApiFoundationTest extends TestCase
@@ -57,5 +57,11 @@ class ApiFoundationTest extends TestCase
         $response->assertJsonPath('roles', ['admin']);
         $response->assertJsonPath('permissions', ['users.view']);
         $this->assertSame($user->email, $response->json('email'));
+
+        // The User PK is a UUID (PRISM parity), not an auto-increment int.
+        $this->assertMatchesRegularExpression(
+            '/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/',
+            $response->json('id'),
+        );
     }
 }

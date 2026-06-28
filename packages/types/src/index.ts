@@ -30,18 +30,18 @@ export interface ApiError {
 }
 
 export interface Role {
-  id: number
+  id: Uuid
   name: string
   permissions: string[]
 }
 
 export interface Permission {
-  id: number
+  id: Uuid
   name: string
 }
 
 export interface User {
-  id: number
+  id: Uuid
   name: string
   email: string
   email_verified_at: IsoDateTime | null
