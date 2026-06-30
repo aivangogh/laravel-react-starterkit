@@ -45,9 +45,18 @@ export interface User {
   name: string
   email: string
   email_verified_at: IsoDateTime | null
+  /** Public URL of the user's avatar, or null when none is set. */
+  avatar_url: string | null
   roles: string[]
   permissions: string[]
   created_at: IsoDateTime
+}
+
+/** Application-wide settings (spatie/laravel-settings `general` group). */
+export interface GeneralSettings {
+  app_name: string
+  support_email: string | null
+  registration_enabled: boolean
 }
 
 /** A Spatie activity-log entry. `subject`/`causer` are flat morph type+id pairs. */

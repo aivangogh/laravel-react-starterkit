@@ -2,7 +2,9 @@
 
 use App\Http\Controllers\Api\ActivityLogController;
 use App\Http\Controllers\Api\PermissionController;
+use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\RoleController;
+use App\Http\Controllers\Api\SettingsController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Resources\UserResource;
 use Illuminate\Http\Request;
@@ -39,6 +41,18 @@ Route::middleware('auth:sanctum')->group(function () {
     // in the controller. Written by models (LogsActivity), never via the API.
     Route::get('activity-log', [ActivityLogController::class, 'index']);
     Route::get('activity-log/{activity}', [ActivityLogController::class, 'show']);
+
+    // The authenticated user's own profile — name/email, password and avatar.
+    // Self-service: no extra permission beyond `auth:sanctum`.
+    Route::put('profile', [ProfileController::class, 'update']);
+    Route::put('profile/password', [ProfileController::class, 'updatePassword']);
+    Route::post('profile/avatar', [ProfileController::class, 'uploadAvatar']);
+    Route::delete('profile/avatar', [ProfileController::class, 'destroyAvatar']);
+
+    // App-wide settings. Read/update gated by settings.view / settings.update
+    // in the controller (SettingsController::middleware()).
+    Route::get('settings', [SettingsController::class, 'show']);
+    Route::put('settings', [SettingsController::class, 'update']);
 });
 
 /*

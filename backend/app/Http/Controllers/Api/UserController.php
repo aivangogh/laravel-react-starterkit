@@ -46,7 +46,7 @@ class UserController extends ApiController implements HasMiddleware
 
         return UserResource::collection(
             User::query()
-                ->with(['roles', 'permissions'])
+                ->with(['roles', 'permissions', 'media'])
                 ->latest('id')
                 ->paginate($perPage)
         );
@@ -73,7 +73,7 @@ class UserController extends ApiController implements HasMiddleware
      */
     public function show(User $user): UserResource
     {
-        return new UserResource($user->load('roles'));
+        return new UserResource($user->load(['roles', 'media']));
     }
 
     /**
