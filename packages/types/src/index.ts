@@ -59,6 +59,24 @@ export interface GeneralSettings {
   registration_enabled: boolean
 }
 
+/** A Sanctum personal access token — metadata only, never the secret. */
+export interface ApiToken {
+  id: number
+  name: string
+  abilities: string[]
+  last_used_at: IsoDateTime | null
+  expires_at: IsoDateTime | null
+  created_at: IsoDateTime
+}
+
+/**
+ * The response when creating a token: the metadata plus the one-time
+ * plaintext secret, which is shown once and never recoverable afterwards.
+ */
+export interface NewApiToken extends ApiToken {
+  plain_text_token: string
+}
+
 /** A Spatie activity-log entry. `subject`/`causer` are flat morph type+id pairs. */
 export interface Activity {
   id: number
