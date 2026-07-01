@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\ActivityLogController;
+use App\Http\Controllers\Api\ApiTokenController;
 use App\Http\Controllers\Api\PermissionController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\RoleController;
@@ -53,6 +54,12 @@ Route::middleware('auth:sanctum')->group(function () {
     // in the controller (SettingsController::middleware()).
     Route::get('settings', [SettingsController::class, 'show']);
     Route::put('settings', [SettingsController::class, 'update']);
+
+    // The authenticated user's own Sanctum personal access tokens. Self-service
+    // (no extra permission): list, create (plaintext shown once), revoke.
+    Route::get('tokens', [ApiTokenController::class, 'index']);
+    Route::post('tokens', [ApiTokenController::class, 'store']);
+    Route::delete('tokens/{id}', [ApiTokenController::class, 'destroy']);
 });
 
 /*
