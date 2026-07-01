@@ -25,19 +25,24 @@ class User extends Authenticatable implements HasMedia
 
 ### 2. Seed roles & permissions
 
-Planned presets (see [modules.md](modules.md)):
+Presets (see [modules.md](modules.md)). Permission names below are the ones the API controllers
+actually enforce via `permission:*` middleware — the seeder must match them exactly.
 
-**Basic preset**
+**Basic preset** — implemented by `RolePermissionSeeder` (Phase 3)
 - Roles: `super-admin`, `admin`, `user`
-- Permissions: `users.{view,create,update,delete}`, `roles.{view,manage}`,
-  `permissions.view`, `activity-log.view`, `settings.manage`
+- Permissions: `users.{view,create,update,delete}`, `roles.{view,create,update,delete}`,
+  `activity.view`, `settings.{view,update}`
+- `activity.view` and `settings.*` are seeded only when the matching feature is enabled in
+  `config/starterkit.php`. `super-admin` holds no explicit permissions — a `Gate::before` hook
+  (`AppServiceProvider`) grants it every ability. `admin` gets the full installed catalogue; `user`
+  gets none (self-service endpoints — profile, tokens — need no permission).
 
-**E-commerce preset** (adds)
+**E-commerce preset** (adds — Phase 4)
 - Role: `customer`
 - Permissions: `products.*`, `categories.*`, `orders.*`
 
-A `RolePermissionSeeder` will read the chosen preset from `config('starterkit')` and seed only
-what's installed.
+`RolePermissionSeeder` reads the chosen preset + features from `config('starterkit')` and seeds only
+what's installed; `php artisan kit:install` provisions it end to end (migrate + seed + super-admin).
 
 ### 3. Protect API routes
 
