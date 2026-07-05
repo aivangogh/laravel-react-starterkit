@@ -45,6 +45,20 @@ class RolePermissionSeeder extends Seeder
             $permissions[] = 'settings.update';
         }
 
+        // E-commerce catalogue — gated by the installed preset, not a feature
+        // flag. Present only for the E-commerce preset; a Basic install carries
+        // no catalog.*/orders.* permission. Names MUST match the `permission:*`
+        // gates on the module's API controllers (see the ecommerce stub).
+        if (config('starterkit.preset') === 'ecommerce') {
+            $permissions[] = 'catalog.view';
+            $permissions[] = 'catalog.create';
+            $permissions[] = 'catalog.update';
+            $permissions[] = 'catalog.delete';
+            $permissions[] = 'orders.view';
+            $permissions[] = 'orders.update';
+            $permissions[] = 'orders.delete';
+        }
+
         foreach ($permissions as $name) {
             Permission::findOrCreate($name, $guard);
         }

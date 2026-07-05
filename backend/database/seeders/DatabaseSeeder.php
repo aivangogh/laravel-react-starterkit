@@ -32,5 +32,12 @@ class DatabaseSeeder extends Seeder
         );
 
         $admin->assignRole('super-admin');
+
+        // Demo catalogue + a sample cart/order, seeded only for the E-commerce
+        // preset. The seeder self-guards on the preset too, so a Basic install
+        // stays free of any e-commerce data.
+        if (config('starterkit.preset') === 'ecommerce') {
+            $this->call(EcommerceSampleDataSeeder::class);
+        }
     }
 }
