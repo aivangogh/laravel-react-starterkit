@@ -21,6 +21,12 @@ class RolePermissionSeederTest extends TestCase
         'activity.view', 'settings.view', 'settings.update',
     ];
 
+    /** Catalogue the e-commerce module controllers enforce — preset-gated. */
+    private const ECOMMERCE = [
+        'catalog.view', 'catalog.create', 'catalog.update', 'catalog.delete',
+        'orders.view', 'orders.update', 'orders.delete',
+    ];
+
     public function test_seeds_the_enforced_catalogue_and_roles(): void
     {
         $this->seed(RolePermissionSeeder::class);
@@ -85,6 +91,48 @@ class RolePermissionSeederTest extends TestCase
         $this->assertSame(count(self::ENFORCED), Permission::count());
         $this->assertSame(3, Role::count());
         $this->assertCount(count(self::ENFORCED), Role::findByName('admin', 'web')->permissions);
+    }
+
+    public function test_ecommerce_preset_seeds_catalog_and_orders_permissions_for_admin(): void
+    {
+        config(['starterkit.preset' => 'ecommerce']);
+
+        $this->seed(RolePermissionSeeder::class);
+
+        foreach (self::ECOMMERCE as $name) {
+            $this->assertDatabaseHas('permissions', ['name' => $name, 'guard_name' => 'web']);
+        }
+
+        // Admin holds core + feature + the ecommerce catalogue; user still none.
+        $this->assertEqualsCanonicalizing(
+            array_merge(self::ENFORCED, self::ECOMMERCE),
+            Role::findByName('admin', 'web')->permissions->pluck('name')->all(),
+        );
+        $this->assertCount(0, Role::findByName('user', 'web')->permissions);
+    }
+
+    public function test_basic_preset_does_not_seed_ecommerce_permissions(): void
+    {
+        config(['starterkit.preset' => 'basic']);
+
+        $this->seed(RolePermissionSeeder::class);
+
+        foreach (self::ECOMMERCE as $name) {
+            $this->assertDatabaseMissing('permissions', ['name' => $name]);
+        }
+        $this->assertSame(count(self::ENFORCED), Permission::count());
+    }
+
+    public function test_ecommerce_permission_seeding_is_idempotent(): void
+    {
+        config(['starterkit.preset' => 'ecommerce']);
+
+        $this->seed(RolePermissionSeeder::class);
+        $this->seed(RolePermissionSeeder::class);
+
+        $expected = count(self::ENFORCED) + count(self::ECOMMERCE);
+        $this->assertSame($expected, Permission::count());
+        $this->assertCount($expected, Role::findByName('admin', 'web')->permissions);
     }
 
     public function test_database_seeder_creates_the_super_admin_account(): void
