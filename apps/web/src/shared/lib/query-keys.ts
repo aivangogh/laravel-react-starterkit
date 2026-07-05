@@ -32,6 +32,18 @@ export const activityKeys = {
   all: ['activity'] as const,
   lists: () => [...activityKeys.all, 'list'] as const,
   list: (params?: Record<string, unknown>) => [...activityKeys.lists(), params ?? {}] as const,
+  detail: (id: number) => [...activityKeys.all, 'detail', id] as const,
+}
+
+export const tokenKeys = {
+  all: ['tokens'] as const,
+  lists: () => [...tokenKeys.all, 'list'] as const,
+  list: (params?: Record<string, unknown>) => [...tokenKeys.lists(), params ?? {}] as const,
+}
+
+export const settingsKeys = {
+  all: ['settings'] as const,
+  detail: () => [...settingsKeys.all, 'detail'] as const,
 }
 
 /**
