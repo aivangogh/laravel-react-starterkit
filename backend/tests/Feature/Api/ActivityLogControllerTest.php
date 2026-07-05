@@ -72,6 +72,66 @@ class ActivityLogControllerTest extends TestCase
         $this->assertSame([$target->id], $subjectIds->all());
     }
 
+    public function test_index_filters_by_search_term(): void
+    {
+        $admin = $this->admin();
+
+        activity()->log('a very findable needle message');
+        activity()->log('some other unrelated entry');
+
+        // Case-insensitive search across description + log_name.
+        $descriptions = collect(
+            $this->actingAs($admin)->getJson('/api/activity-log?q=NEEDLE')->assertOk()->json('data')
+        )->pluck('description');
+
+        $this->assertTrue($descriptions->contains('a very findable needle message'));
+        $this->assertFalse($descriptions->contains('some other unrelated entry'));
+    }
+
+    public function test_search_layers_on_top_of_existing_filters(): void
+    {
+        $admin = $this->admin();
+
+        activity('security')->log('needle inside security log');
+        activity('billing')->log('needle inside billing log');
+
+        // The `q` term matches both entries, but the log_name filter narrows it.
+        $data = $this->actingAs($admin)
+            ->getJson('/api/activity-log?q=needle&log_name=security')
+            ->assertOk()->json('data');
+
+        $this->assertCount(1, $data);
+        $this->assertSame(['security'], collect($data)->pluck('log_name')->unique()->values()->all());
+    }
+
+    public function test_index_sorts_by_allowed_column(): void
+    {
+        $admin = $this->admin();
+
+        activity('zeta')->log('later');
+        activity('alpha')->log('earlier');
+
+        $asc = collect($this->actingAs($admin)->getJson('/api/activity-log?sort=log_name&dir=asc')->assertOk()->json('data'))
+            ->pluck('log_name');
+        $this->assertLessThan($asc->search('zeta'), $asc->search('alpha'));
+
+        $desc = collect($this->actingAs($admin)->getJson('/api/activity-log?sort=log_name&dir=desc')->assertOk()->json('data'))
+            ->pluck('log_name');
+        $this->assertLessThan($desc->search('alpha'), $desc->search('zeta'));
+    }
+
+    public function test_index_ignores_disallowed_sort(): void
+    {
+        $admin = $this->admin();
+        User::factory()->create(); // writes an activity row
+
+        // `causer_id` is a real column but NOT whitelisted for sorting, and a
+        // bogus column would raise a SQL error if it reached the query — both
+        // are ignored, leaving the default newest-first order intact.
+        $this->actingAs($admin)->getJson('/api/activity-log?sort=causer_id&dir=asc')->assertOk();
+        $this->actingAs($admin)->getJson('/api/activity-log?sort=bogus_column&dir=asc')->assertOk();
+    }
+
     public function test_show_returns_single_activity(): void
     {
         $admin = $this->admin();

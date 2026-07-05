@@ -49,6 +49,85 @@ class UserControllerTest extends TestCase
             ]);
     }
 
+    public function test_index_filters_by_search_term(): void
+    {
+        User::factory()->create(['name' => 'Alice Zephyr', 'email' => 'alice@example.test']);
+        User::factory()->create(['name' => 'Bob Quartz', 'email' => 'bob@example.test']);
+
+        // Search is case-insensitive and spans name + email.
+        $emails = collect(
+            $this->actingAs($this->admin())->getJson('/api/users?q=ZEPHYR')->assertOk()->json('data')
+        )->pluck('email');
+
+        $this->assertTrue($emails->contains('alice@example.test'));
+        $this->assertFalse($emails->contains('bob@example.test'));
+    }
+
+    public function test_index_sorts_by_name_ascending_and_descending(): void
+    {
+        $admin = $this->admin();
+        User::factory()->create(['name' => 'Aaron First']);
+        User::factory()->create(['name' => 'Zoe Last']);
+
+        $asc = collect($this->actingAs($admin)->getJson('/api/users?sort=name&dir=asc')->assertOk()->json('data'))
+            ->pluck('name');
+        $this->assertLessThan($asc->search('Zoe Last'), $asc->search('Aaron First'));
+
+        $desc = collect($this->actingAs($admin)->getJson('/api/users?sort=name&dir=desc')->assertOk()->json('data'))
+            ->pluck('name');
+        $this->assertLessThan($desc->search('Aaron First'), $desc->search('Zoe Last'));
+    }
+
+    public function test_index_ignores_disallowed_sort_and_falls_back_to_default(): void
+    {
+        $admin = $this->admin();
+        $older = User::factory()->create();
+        $newer = User::factory()->create();
+
+        // A non-whitelisted column never reaches the SQL (no 500), and ordering
+        // falls back to the default newest-first (ordered-UUID id desc).
+        $ids = collect(
+            $this->actingAs($admin)->getJson('/api/users?sort=bogus_column&dir=asc')->assertOk()->json('data')
+        )->pluck('id');
+
+        $this->assertLessThan($ids->search($older->id), $ids->search($newer->id));
+    }
+
+    public function test_index_sort_is_safe_against_injection(): void
+    {
+        $admin = $this->admin();
+        User::factory()->create();
+
+        // A SQL-injection payload as the sort column is ignored, not executed.
+        $this->actingAs($admin)
+            ->getJson('/api/users?'.http_build_query(['sort' => 'name); DROP TABLE users; --', 'dir' => 'asc']))
+            ->assertOk();
+
+        $this->assertDatabaseCount('users', 2); // admin + the seeded user survive
+    }
+
+    public function test_index_respects_per_page_and_page(): void
+    {
+        $admin = $this->admin();           // 1 user
+        User::factory()->count(5)->create(); // total 6
+
+        $page1 = $this->actingAs($admin)->getJson('/api/users?per_page=2&page=1')->assertOk()
+            ->assertJsonCount(2, 'data')
+            ->assertJsonPath('meta.per_page', 2)
+            ->assertJsonPath('meta.current_page', 1)
+            ->assertJsonPath('meta.total', 6)
+            ->assertJsonPath('meta.last_page', 3);
+
+        $page3 = $this->actingAs($admin)->getJson('/api/users?per_page=2&page=3')->assertOk()
+            ->assertJsonCount(2, 'data')
+            ->assertJsonPath('meta.current_page', 3);
+
+        // Distinct pages return distinct rows.
+        $ids1 = collect($page1->json('data'))->pluck('id');
+        $ids3 = collect($page3->json('data'))->pluck('id');
+        $this->assertEmpty($ids1->intersect($ids3));
+    }
+
     public function test_store_creates_user_and_assigns_roles(): void
     {
         $admin = $this->admin();

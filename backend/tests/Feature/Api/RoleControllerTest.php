@@ -53,6 +53,48 @@ class RoleControllerTest extends TestCase
             ]);
     }
 
+    public function test_index_filters_by_search_term(): void
+    {
+        Role::findOrCreate('editor');
+        Role::findOrCreate('manager');
+
+        // Case-insensitive search on the role name.
+        $names = collect(
+            $this->actingAs($this->admin())->getJson('/api/roles?q=EDIT')->assertOk()->json('data')
+        )->pluck('name');
+
+        $this->assertTrue($names->contains('editor'));
+        $this->assertFalse($names->contains('manager'));
+    }
+
+    public function test_index_sorts_by_name_ascending_and_descending(): void
+    {
+        $admin = $this->admin();
+        Role::findOrCreate('aaa-role');
+        Role::findOrCreate('zzz-role');
+
+        $asc = collect($this->actingAs($admin)->getJson('/api/roles?sort=name&dir=asc')->assertOk()->json('data'))
+            ->pluck('name');
+        $this->assertLessThan($asc->search('zzz-role'), $asc->search('aaa-role'));
+
+        $desc = collect($this->actingAs($admin)->getJson('/api/roles?sort=name&dir=desc')->assertOk()->json('data'))
+            ->pluck('name');
+        $this->assertLessThan($desc->search('aaa-role'), $desc->search('zzz-role'));
+    }
+
+    public function test_index_ignores_disallowed_sort(): void
+    {
+        $admin = $this->admin();
+        Role::findOrCreate('one');
+
+        // A non-whitelisted / injection-y sort column is ignored, not executed.
+        $this->actingAs($admin)
+            ->getJson('/api/roles?'.http_build_query(['sort' => 'name); DROP TABLE roles; --', 'dir' => 'asc']))
+            ->assertOk();
+
+        $this->assertDatabaseHas('roles', ['name' => 'one']);
+    }
+
     public function test_store_creates_role_and_syncs_permissions(): void
     {
         $response = $this->actingAs($this->admin())->postJson('/api/roles', [

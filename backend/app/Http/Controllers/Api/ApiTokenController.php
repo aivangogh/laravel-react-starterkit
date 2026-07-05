@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Concerns\HandlesListQuery;
 use App\Http\Requests\StoreApiTokenRequest;
 use App\Http\Resources\TokenResource;
 use Illuminate\Http\JsonResponse;
@@ -17,16 +18,24 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class ApiTokenController extends ApiController
 {
+    use HandlesListQuery;
+
     /**
      * List the caller's tokens (metadata only — never the secret). A flat
      * `ApiToken[]`; the set is small and read as a lookup, so it is not
-     * paginated.
+     * paginated, but it still honors the list-query contract (`q`, `sort`,
+     * `dir`) — always scoped to the caller's own tokens via the relation query.
      */
     public function index(Request $request): AnonymousResourceCollection
     {
-        return TokenResource::collection(
-            $request->user()->tokens()->latest('id')->get()
-        );
+        $tokens = $this->applyListQuery(
+            $request->user()->tokens()->getQuery(),
+            $request,
+            sortable: ['name', 'last_used_at', 'created_at'],
+            searchable: ['name'],
+        )->get();
+
+        return TokenResource::collection($tokens);
     }
 
     /**
