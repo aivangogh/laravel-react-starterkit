@@ -78,3 +78,14 @@ Route::middleware('auth:sanctum')->group(function () {
 foreach (glob(__DIR__.'/modules/*.php') ?: [] as $moduleRoutes) {
     require $moduleRoutes;
 }
+
+// In tests, also load each module stub's route file directly from
+// stubs/modules/*/routes/*.php — the same "treat every stub as installed"
+// mechanism AppServiceProvider uses to register the stub migrations in the
+// testing env. Production is unaffected: a Basic install only loads the
+// published routes above, so it carries no e-commerce endpoints.
+if (app()->environment('testing')) {
+    foreach (glob(base_path('stubs/modules/*/routes/*.php')) ?: [] as $moduleRoutes) {
+        require $moduleRoutes;
+    }
+}
