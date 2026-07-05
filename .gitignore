@@ -25,5 +25,6 @@ Thumbs.db
 
 # Claude Code — personal/local overrides stay local; shared config + skills are committed
 .claude/settings.local.json
+.claude/worktrees/
 
 # Note: backend/ has its own .gitignore (vendor/, etc.)
