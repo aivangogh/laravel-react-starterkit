@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Concerns\HandlesListQuery;
 use App\Http\Resources\PermissionResource;
 use App\Models\Permission;
+use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
@@ -16,6 +18,8 @@ use Illuminate\Routing\Controllers\Middleware;
  */
 class PermissionController extends ApiController implements HasMiddleware
 {
+    use HandlesListQuery;
+
     /**
      * @return array<int, Middleware>
      */
@@ -28,12 +32,20 @@ class PermissionController extends ApiController implements HasMiddleware
 
     /**
      * The full permission catalogue as a flat `Permission[]` array (no
-     * pagination — the set is small and consumed as a lookup).
+     * pagination — the set is small and consumed as a lookup), ordered by name.
+     * Supports the list-query contract's `q` search on the permission name; the
+     * ordering stays fixed (no sortable columns) so the picker stays alphabetical.
      */
-    public function index(): AnonymousResourceCollection
+    public function index(Request $request): AnonymousResourceCollection
     {
-        return PermissionResource::collection(
-            Permission::query()->orderBy('name')->get()
-        );
+        $permissions = $this->applyListQuery(
+            Permission::query(),
+            $request,
+            searchable: ['name'],
+            defaultSort: 'name',
+            defaultDir: 'asc',
+        )->get();
+
+        return PermissionResource::collection($permissions);
     }
 }

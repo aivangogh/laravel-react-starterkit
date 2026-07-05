@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Concerns\HandlesListQuery;
 use App\Http\Requests\StoreRoleRequest;
 use App\Http\Requests\UpdateRoleRequest;
 use App\Http\Resources\RoleResource;
@@ -20,6 +21,8 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class RoleController extends ApiController implements HasMiddleware
 {
+    use HandlesListQuery;
+
     /**
      * Per-action permission gates via the Spatie middleware alias. The whole
      * resource already sits behind `auth:sanctum` (the route group).
@@ -37,16 +40,22 @@ class RoleController extends ApiController implements HasMiddleware
     }
 
     /**
-     * Paginated list of roles — the shared `Paginated<Role>` shape. Permissions
-     * are eager-loaded to keep the listing free of N+1 queries.
+     * Paginated list of roles — the shared `Paginated<Role>` shape. Honors the
+     * list-query contract (`q`, `sort`, `dir`, `per_page`). Permissions are
+     * eager-loaded to keep the listing free of N+1 queries.
      */
     public function index(Request $request): AnonymousResourceCollection
     {
         $perPage = max(1, min($request->integer('per_page', 15), 100));
 
-        return RoleResource::collection(
-            Role::query()->with('permissions')->latest('id')->paginate($perPage)
-        );
+        $roles = $this->applyListQuery(
+            Role::query()->with('permissions'),
+            $request,
+            sortable: ['name', 'created_at'],
+            searchable: ['name'],
+        )->paginate($perPage);
+
+        return RoleResource::collection($roles);
     }
 
     /**

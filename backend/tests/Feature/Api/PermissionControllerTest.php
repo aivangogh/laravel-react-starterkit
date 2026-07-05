@@ -31,6 +31,25 @@ class PermissionControllerTest extends TestCase
         );
     }
 
+    public function test_index_filters_permissions_by_search_term(): void
+    {
+        foreach (['roles.view', 'users.view', 'users.create'] as $name) {
+            Permission::findOrCreate($name);
+        }
+
+        $viewer = tap(Role::findOrCreate('viewer'))->givePermissionTo('roles.view');
+        $user = tap(User::factory()->create())->assignRole($viewer);
+
+        // Flat Permission[] (no pagination); case-insensitive search on name.
+        $names = collect(
+            $this->actingAs($user)->getJson('/api/permissions?q=USERS')->assertOk()->json()
+        )->pluck('name');
+
+        $this->assertTrue($names->contains('users.view'));
+        $this->assertTrue($names->contains('users.create'));
+        $this->assertFalse($names->contains('roles.view'));
+    }
+
     public function test_requires_roles_view_permission(): void
     {
         Permission::findOrCreate('roles.view');

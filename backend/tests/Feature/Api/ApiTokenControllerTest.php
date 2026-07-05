@@ -32,6 +32,48 @@ class ApiTokenControllerTest extends TestCase
             ->assertJsonMissing(['name' => 'someone-else']);
     }
 
+    public function test_index_filters_tokens_by_search_term(): void
+    {
+        $user = User::factory()->create();
+        $user->createToken('production-key');
+        $user->createToken('staging-key');
+
+        // Case-insensitive search on the token name, scoped to the caller.
+        $names = collect(
+            $this->actingAs($user)->getJson('/api/tokens?q=PRODUCTION')->assertOk()->json()
+        )->pluck('name');
+
+        $this->assertTrue($names->contains('production-key'));
+        $this->assertFalse($names->contains('staging-key'));
+    }
+
+    public function test_index_sorts_tokens_by_name(): void
+    {
+        $user = User::factory()->create();
+        $user->createToken('omega');
+        $user->createToken('alpha');
+
+        $asc = $this->actingAs($user)->getJson('/api/tokens?sort=name&dir=asc')->assertOk()->json();
+        $this->assertSame(['alpha', 'omega'], collect($asc)->pluck('name')->all());
+
+        $desc = $this->actingAs($user)->getJson('/api/tokens?sort=name&dir=desc')->assertOk()->json();
+        $this->assertSame(['omega', 'alpha'], collect($desc)->pluck('name')->all());
+    }
+
+    public function test_index_ignores_disallowed_sort_for_tokens(): void
+    {
+        $user = User::factory()->create();
+        $user->createToken('one');
+        $user->createToken('two');
+
+        // A non-whitelisted column is ignored (no SQL error); the flat shape and
+        // caller-scoping are preserved.
+        $this->actingAs($user)
+            ->getJson('/api/tokens?sort=bogus_column&dir=asc')
+            ->assertOk()
+            ->assertJsonCount(2);
+    }
+
     public function test_index_never_exposes_the_token_secret(): void
     {
         $user = User::factory()->create();

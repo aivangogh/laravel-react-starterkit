@@ -26,6 +26,12 @@ class IndexActivityRequest extends ApiFormRequest
             'from' => ['sometimes', 'date'],
             'to' => ['sometimes', 'date', 'after_or_equal:from'],
             'per_page' => ['sometimes', 'integer', 'min:1', 'max:100'],
+            // List-query contract (see HandlesListQuery). Kept loose on purpose:
+            // an unknown sort column / direction is ignored by the trait rather
+            // than rejected, matching the other list endpoints.
+            'q' => ['sometimes', 'string', 'max:255'],
+            'sort' => ['sometimes', 'string'],
+            'dir' => ['sometimes', 'string'],
         ];
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Concerns\HandlesListQuery;
 use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\UpdateUserRequest;
 use App\Http\Resources\UserResource;
@@ -20,6 +21,8 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class UserController extends ApiController implements HasMiddleware
 {
+    use HandlesListQuery;
+
     /**
      * Per-action permission gates via the Spatie middleware alias. The whole
      * resource already sits behind `auth:sanctum` (the route group).
@@ -37,19 +40,22 @@ class UserController extends ApiController implements HasMiddleware
     }
 
     /**
-     * Paginated list of users — the shared `Paginated<User>` shape. Roles and
+     * Paginated list of users — the shared `Paginated<User>` shape. Honors the
+     * list-query contract (`q`, `sort`, `dir`, `per_page`). Roles and
      * permissions are eager-loaded to keep the listing free of N+1 queries.
      */
     public function index(Request $request): AnonymousResourceCollection
     {
         $perPage = max(1, min($request->integer('per_page', 15), 100));
 
-        return UserResource::collection(
-            User::query()
-                ->with(['roles', 'permissions', 'media'])
-                ->latest('id')
-                ->paginate($perPage)
-        );
+        $users = $this->applyListQuery(
+            User::query()->with(['roles', 'permissions', 'media']),
+            $request,
+            sortable: ['name', 'email', 'created_at'],
+            searchable: ['name', 'email'],
+        )->paginate($perPage);
+
+        return UserResource::collection($users);
     }
 
     /**
