@@ -33,3 +33,15 @@ export const activityKeys = {
   lists: () => [...activityKeys.all, 'list'] as const,
   list: (params?: Record<string, unknown>) => [...activityKeys.lists(), params ?? {}] as const,
 }
+
+/**
+ * Generic server-driven table keys. Used by `useServerTable`, which is resource-agnostic:
+ * the `resource` segment namespaces the cache per endpoint and `params` carries the serialised
+ * table state (page/per_page/sort/dir/q + any extra filters) so paging/sorting/searching each
+ * gets its own cache entry.
+ */
+export const tableKeys = {
+  all: ['table'] as const,
+  list: (resource: string, params?: Record<string, unknown>) =>
+    [...tableKeys.all, resource, params ?? {}] as const,
+}
