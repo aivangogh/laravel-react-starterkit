@@ -54,10 +54,7 @@ function onLogout() {
 <template>
   <div class="flex min-h-screen bg-background text-foreground">
     <!-- Desktop sidebar -->
-    <aside
-      class="hidden w-64 shrink-0 flex-col border-r bg-card md:flex"
-      aria-label="Sidebar"
-    >
+    <aside class="hidden w-64 shrink-0 flex-col border-r bg-card md:flex" aria-label="Sidebar">
       <div class="flex h-14 items-center px-6">
         <RouterLink :to="{ name: 'home' }" class="text-lg font-semibold tracking-tight">
           {{ APP_NAME }}
@@ -116,9 +113,8 @@ function onLogout() {
                 </span>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <!-- Placeholder target until a dedicated profile page ships (Phase 6). -->
               <DropdownMenuItem as-child>
-                <RouterLink :to="{ name: 'home' }">
+                <RouterLink :to="{ name: 'profile.edit' }">
                   <User class="size-4" />
                   <span>Profile</span>
                 </RouterLink>
