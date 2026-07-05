@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "@app/config/tsconfig.vue.json",
+  "compilerOptions": {
+    "paths": {
+      "@/*": ["./src/*"],
+      "@app/ui/*": ["../../packages/ui/src/*"],
+      "@app/types": ["../../packages/types/src/index.ts"]
+    }
+  },
+  "include": ["env.d.ts", "src"]
+}
