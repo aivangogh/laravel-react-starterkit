@@ -1,0 +1,5 @@
+/* Tailwind v4 entry + design tokens come from the shared UI package. */
+@import '@app/ui/styles/globals.css';
+
+/* Tell Tailwind to scan this app's source (in addition to @app/ui, which globals.css covers). */
+@source '../';

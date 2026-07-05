@@ -1,0 +1,42 @@
+{
+  "name": "web",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "type-check": "vue-tsc --noEmit",
+    "test:unit": "vitest run",
+    "test:e2e": "playwright test"
+  },
+  "dependencies": {
+    "@app/types": "workspace:*",
+    "@app/ui": "workspace:*",
+    "@tanstack/vue-query": "^5.90.0",
+    "axios": "^1.7.9",
+    "lucide-vue-next": "^1.0.0",
+    "pinia": "^3.0.3",
+    "vue": "^3.5.0",
+    "vue-router": "^4.5.1"
+  },
+  "devDependencies": {
+    "@app/config": "workspace:*",
+    "@playwright/test": "^1.50.0",
+    "@tailwindcss/vite": "^4.3.1",
+    "@vitejs/plugin-vue": "^6.0.0",
+    "@vue/test-utils": "^2.4.6",
+    "eslint": "^10.6.0",
+    "globals": "^17.7.0",
+    "jsdom": "^26.0.0",
+    "prettier": "^3.9.0",
+    "tailwindcss": "^4.3.1",
+    "typescript": "^6.0.3",
+    "vite": "^7.0.0",
+    "vitest": "^3.0.0",
+    "vue-tsc": "^3.0.0"
+  }
+}
