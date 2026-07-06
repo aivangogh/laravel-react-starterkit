@@ -64,6 +64,22 @@ Route::middleware('auth:sanctum')->group(function () {
 
 /*
 |--------------------------------------------------------------------------
+| Public routes
+|--------------------------------------------------------------------------
+|
+| Unauthenticated endpoints the SPA needs before login. `/config` exposes the
+| install state (preset + feature flags) from config/starterkit.php so the
+| frontend can gate navigation at boot. Matches the shared `AppConfig` type.
+|
+*/
+
+Route::get('/config', fn () => response()->json([
+    'preset' => config('starterkit.preset'),
+    'features' => config('starterkit.features'),
+]));
+
+/*
+|--------------------------------------------------------------------------
 | Module routes
 |--------------------------------------------------------------------------
 |
