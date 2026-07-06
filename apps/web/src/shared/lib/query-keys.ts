@@ -46,6 +46,11 @@ export const settingsKeys = {
   detail: () => [...settingsKeys.all, 'detail'] as const,
 }
 
+export const configKeys = {
+  all: ['config'] as const,
+  detail: () => [...configKeys.all, 'detail'] as const,
+}
+
 /**
  * Generic server-driven table keys. Used by `useServerTable`, which is resource-agnostic:
  * the `resource` segment namespaces the cache per endpoint and `params` carries the serialised

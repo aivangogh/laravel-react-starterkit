@@ -8,5 +8,5 @@
       "@app/types": ["../../packages/types/src/index.ts"]
     }
   },
-  "include": ["env.d.ts", "src"]
+  "include": ["env.d.ts", "src", "stubs/modules"]
 }

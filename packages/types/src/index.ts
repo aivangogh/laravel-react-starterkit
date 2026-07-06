@@ -29,6 +29,15 @@ export interface ApiError {
   errors?: Record<string, string[]>
 }
 
+/**
+ * Public install state exposed by `GET /api/config` (from `config/starterkit.php`).
+ * The SPA reads this at boot to gate navigation before the user is authenticated.
+ */
+export interface AppConfig {
+  preset: 'basic' | 'ecommerce'
+  features: Record<string, boolean>
+}
+
 export interface Role {
   id: Uuid
   name: string
