@@ -15,7 +15,10 @@ export function usePermissions() {
   const roles = computed(() => user.value?.roles ?? [])
 
   function can(permission: string): boolean {
-    return permissions.value.includes(permission)
+    // `super-admin` bypasses every permission check — mirrors the backend
+    // `Gate::before` hook (it holds no explicit permissions, so a plain
+    // `permissions.includes()` would wrongly deny it the whole UI).
+    return roles.value.includes('super-admin') || permissions.value.includes(permission)
   }
 
   function hasRole(role: string): boolean {
