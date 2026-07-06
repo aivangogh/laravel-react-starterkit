@@ -3,7 +3,8 @@ import { defineComponent, h } from 'vue'
 import { flushPromises, mount } from '@vue/test-utils'
 import { QueryClient, VueQueryPlugin } from '@tanstack/vue-query'
 import type { AppConfig } from '@app/types'
-import { useAppConfig } from '@/shared/composables/useAppConfig'
+import { ensureModuleEnabled, useAppConfig } from '@/shared/composables/useAppConfig'
+import { queryClient } from '@/shared/lib/query-client'
 
 // Hoisted mock handle so it exists when `vi.mock`'s factory runs.
 const mocks = vi.hoisted(() => ({ get: vi.fn() }))
@@ -31,6 +32,8 @@ function mountComposable<T>(composable: () => T) {
 describe('useAppConfig', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    // `ensureModuleEnabled` reads the shared singleton cache — reset it between tests.
+    queryClient.clear()
   })
 
   it('fetches config from GET /api/config and projects a basic preset', async () => {
@@ -70,5 +73,48 @@ describe('useAppConfig', () => {
     expect(result.config.value).toBeUndefined()
     expect(result.features.value).toEqual({})
     expect(result.isEcommerce.value).toBe(false)
+  })
+
+  it('isModuleEnabled reflects the ecommerce preset and generic feature flags', async () => {
+    mocks.get.mockResolvedValueOnce({
+      data: { preset: 'ecommerce', features: { media: true } } satisfies AppConfig,
+    })
+
+    const { result } = mountComposable(() => useAppConfig())
+    await flushPromises()
+
+    expect(result.isModuleEnabled('ecommerce')).toBe(true) // preset-gated
+    expect(result.isModuleEnabled('media')).toBe(true) // generic features[] fallback
+    expect(result.isModuleEnabled('unknown')).toBe(false)
+  })
+
+  it('isModuleEnabled treats ecommerce as disabled under a basic preset', async () => {
+    mocks.get.mockResolvedValueOnce({
+      data: { preset: 'basic', features: {} } satisfies AppConfig,
+    })
+
+    const { result } = mountComposable(() => useAppConfig())
+    await flushPromises()
+
+    expect(result.isModuleEnabled('ecommerce')).toBe(false)
+  })
+
+  it('ensureModuleEnabled fetches the config once and evaluates the module for the guard', async () => {
+    mocks.get.mockResolvedValueOnce({
+      data: { preset: 'ecommerce', features: {} } satisfies AppConfig,
+    })
+
+    expect(await ensureModuleEnabled('ecommerce')).toBe(true)
+    // Cached — a second call must not refetch.
+    expect(await ensureModuleEnabled('ecommerce')).toBe(true)
+    expect(mocks.get).toHaveBeenCalledTimes(1)
+  })
+
+  it('ensureModuleEnabled reports a disabled module under a basic preset', async () => {
+    mocks.get.mockResolvedValueOnce({
+      data: { preset: 'basic', features: {} } satisfies AppConfig,
+    })
+
+    expect(await ensureModuleEnabled('ecommerce')).toBe(false)
   })
 })

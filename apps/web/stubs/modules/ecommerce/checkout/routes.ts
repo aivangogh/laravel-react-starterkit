@@ -10,11 +10,13 @@ const routes: AppRouteRecord[] = [
     path: 'checkout',
     name: 'ecommerce.checkout',
     component: () => import('./pages/CheckoutPage.vue'),
+    meta: { module: 'ecommerce' },
   },
   {
     path: 'checkout/confirmation/:id',
     name: 'ecommerce.checkout.confirmation',
     component: () => import('./pages/OrderConfirmationPage.vue'),
+    meta: { module: 'ecommerce' },
   },
 ]
 

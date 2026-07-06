@@ -5,6 +5,7 @@ import {
   type RouteLocationNormalized,
   type RouteRecordRaw,
 } from 'vue-router'
+import { ensureModuleEnabled } from '@/shared/composables/useAppConfig'
 import { useAuthStore } from '@/features/auth/stores/auth'
 import { usePermissions } from '@/shared/composables/usePermissions'
 import DashboardLayout from '@/shared/layouts/DashboardLayout.vue'
@@ -40,6 +41,7 @@ export const navItems: NavItem[] = featureRoutes
     icon: route.meta!.nav!.icon,
     order: route.meta!.nav!.order ?? 0,
     permission: route.meta!.permission,
+    module: route.meta!.module,
   }))
   .sort((a, b) => a.order - b.order)
 
@@ -114,6 +116,14 @@ export async function authGuard(to: RouteLocationNormalized): Promise<Navigation
   }
 
   if (to.meta.guestOnly && auth.isAuthenticated) {
+    return { name: 'home' }
+  }
+
+  // Runtime install gate: a route belonging to an optional module (e.g. e-commerce) is only
+  // reachable when that module is enabled by `/api/config`. The stub is normally absent on a Basic
+  // install (file-presence gate), so this only bites a mounted-but-disabled module. Checked before
+  // `permission` so a disabled module reads as "not installed" (home) rather than "forbidden".
+  if (to.meta.module && !(await ensureModuleEnabled(to.meta.module))) {
     return { name: 'home' }
   }
 
