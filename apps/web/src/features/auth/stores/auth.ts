@@ -31,6 +31,16 @@ export const useAuthStore = defineStore('auth', () => {
   const permissions = computed(() => user.value?.permissions ?? [])
   const roles = computed(() => user.value?.roles ?? [])
 
+  /**
+   * The single source of truth for permission checks in the SPA — used by `usePermissions().can()`,
+   * the `v-can` directive, and the router guard. Mirrors the backend `Gate::before` hook:
+   * `super-admin` bypasses every check (it holds no explicit permissions, so a plain
+   * `permissions.includes()` would wrongly deny it the whole UI); everyone else needs the grant.
+   */
+  function can(permission: string): boolean {
+    return roles.value.includes('super-admin') || permissions.value.includes(permission)
+  }
+
   /** GET /api/user. Tolerates 401 (and any error) by resetting to the logged-out state. */
   async function fetchUser(): Promise<User | null> {
     try {
@@ -68,6 +78,7 @@ export const useAuthStore = defineStore('auth', () => {
     isAuthenticated,
     permissions,
     roles,
+    can,
     fetchUser,
     login,
     register,

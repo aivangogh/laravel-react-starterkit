@@ -20,7 +20,9 @@ interface CanElement extends HTMLElement {
 function evaluate(el: CanElement, binding: DirectiveBinding<string>): void {
   const permission = binding.value
   const store = useAuthStore()
-  const allowed = permission ? store.permissions.includes(permission) : true
+  // Delegate to the store's canonical rule so the super-admin bypass applies here too (a plain
+  // `permissions.includes` would wrongly hide every gated control from the permission-less super-admin).
+  const allowed = permission ? store.can(permission) : true
 
   if (binding.modifiers.disable) {
     if (allowed) {
