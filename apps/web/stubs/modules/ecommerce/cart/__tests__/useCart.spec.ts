@@ -1,0 +1,132 @@
+import { defineComponent, h } from 'vue'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { mount } from '@vue/test-utils'
+import { QueryClient, VueQueryPlugin } from '@tanstack/vue-query'
+import type { Cart } from '../../types'
+import { useCart } from '../composables/useCart'
+
+const mocks = vi.hoisted(() => ({
+  get: vi.fn(),
+  post: vi.fn(),
+  put: vi.fn(),
+  delete: vi.fn(),
+  ensureCsrfCookie: vi.fn(),
+}))
+
+vi.mock('@/shared/lib/http', () => ({
+  http: { get: mocks.get, post: mocks.post, put: mocks.put, delete: mocks.delete },
+  ensureCsrfCookie: mocks.ensureCsrfCookie,
+}))
+
+const fakeCart = {
+  id: 'cart1',
+  user_id: 'u1',
+  total: 25800,
+  items: [
+    {
+      id: 'line1',
+      cart_id: 'cart1',
+      product_id: 'p1',
+      quantity: 2,
+      product: {
+        id: 'p1',
+        category_id: 'c1',
+        name: 'Trail Runner',
+        slug: 'trail-runner',
+        description: null,
+        price: 12900,
+        stock: 8,
+        is_active: true,
+        image_url: null,
+        created_at: '2026-01-01T00:00:00Z',
+        updated_at: '2026-01-01T00:00:00Z',
+      },
+      created_at: '2026-01-01T00:00:00Z',
+      updated_at: '2026-01-01T00:00:00Z',
+    },
+  ],
+  created_at: '2026-01-01T00:00:00Z',
+  updated_at: '2026-01-01T00:00:00Z',
+} as Cart
+
+const CART_KEY = ['cart', 'current']
+
+function withSetup<T>(composable: () => T) {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+  })
+  let result!: T
+  mount(
+    defineComponent({
+      setup() {
+        result = composable()
+        return () => h('div')
+      },
+    }),
+    { global: { plugins: [[VueQueryPlugin, { queryClient }]] } },
+  )
+  return { result, queryClient }
+}
+
+describe('useCart', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mocks.ensureCsrfCookie.mockResolvedValue(undefined)
+    mocks.get.mockResolvedValue({ data: fakeCart })
+    mocks.post.mockResolvedValue({ data: fakeCart })
+    mocks.put.mockResolvedValue({ data: fakeCart })
+    mocks.delete.mockResolvedValue({ data: null })
+  })
+
+  it('reads the cart via GET /api/cart and derives count + subtotal', async () => {
+    const { result } = withSetup(() => useCart())
+
+    await vi.waitFor(() => expect(mocks.get).toHaveBeenCalledWith('/api/cart'))
+    await vi.waitFor(() => expect(result.items.value).toHaveLength(1))
+    expect(result.itemCount.value).toBe(2)
+    expect(result.subtotal.value).toBe(25800)
+    expect(result.isEmpty.value).toBe(false)
+  })
+
+  it('adds an item via POST /api/cart/items, primes CSRF, and invalidates the cart', async () => {
+    const { result, queryClient } = withSetup(() => useCart())
+    const invalidate = vi.spyOn(queryClient, 'invalidateQueries')
+
+    await result.addItem.mutateAsync({ product_id: 'p1', quantity: 1 })
+
+    expect(mocks.ensureCsrfCookie).toHaveBeenCalledTimes(1)
+    expect(mocks.post).toHaveBeenCalledWith('/api/cart/items', { product_id: 'p1', quantity: 1 })
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: CART_KEY })
+  })
+
+  it('updates a line via PUT /api/cart/items/{id} and invalidates the cart', async () => {
+    const { result, queryClient } = withSetup(() => useCart())
+    const invalidate = vi.spyOn(queryClient, 'invalidateQueries')
+
+    await result.updateItem.mutateAsync({ id: 'line1', quantity: 3 })
+
+    expect(mocks.put).toHaveBeenCalledWith('/api/cart/items/line1', { quantity: 3 })
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: CART_KEY })
+  })
+
+  it('removes a line via DELETE /api/cart/items/{id} and invalidates the cart', async () => {
+    const { result, queryClient } = withSetup(() => useCart())
+    const invalidate = vi.spyOn(queryClient, 'invalidateQueries')
+
+    await result.removeItem.mutateAsync('line1')
+
+    expect(mocks.ensureCsrfCookie).toHaveBeenCalledTimes(1)
+    expect(mocks.delete).toHaveBeenCalledWith('/api/cart/items/line1')
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: CART_KEY })
+  })
+
+  it('clears the cart via DELETE /api/cart and invalidates the cart', async () => {
+    const { result, queryClient } = withSetup(() => useCart())
+    const invalidate = vi.spyOn(queryClient, 'invalidateQueries')
+
+    await result.clearCart.mutateAsync()
+
+    expect(mocks.delete).toHaveBeenCalledWith('/api/cart')
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: CART_KEY })
+  })
+})
