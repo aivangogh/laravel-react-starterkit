@@ -51,6 +51,33 @@ export const configKeys = {
   detail: () => [...configKeys.all, 'detail'] as const,
 }
 
+// --- E-commerce module (Phase 7) ---
+export const productKeys = {
+  all: ['products'] as const,
+  lists: () => [...productKeys.all, 'list'] as const,
+  list: (params?: Record<string, unknown>) => [...productKeys.lists(), params ?? {}] as const,
+  detail: (id: string) => [...productKeys.all, 'detail', id] as const,
+}
+
+export const categoryKeys = {
+  all: ['categories'] as const,
+  lists: () => [...categoryKeys.all, 'list'] as const,
+  list: (params?: Record<string, unknown>) => [...categoryKeys.lists(), params ?? {}] as const,
+  detail: (id: string) => [...categoryKeys.all, 'detail', id] as const,
+}
+
+export const orderKeys = {
+  all: ['orders'] as const,
+  lists: () => [...orderKeys.all, 'list'] as const,
+  list: (params?: Record<string, unknown>) => [...orderKeys.lists(), params ?? {}] as const,
+  detail: (id: string) => [...orderKeys.all, 'detail', id] as const,
+}
+
+export const cartKeys = {
+  all: ['cart'] as const,
+  current: () => [...cartKeys.all, 'current'] as const,
+}
+
 /**
  * Generic server-driven table keys. Used by `useServerTable`, which is resource-agnostic:
  * the `resource` segment namespaces the cache per endpoint and `params` carries the serialised
