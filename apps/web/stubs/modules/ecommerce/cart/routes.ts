@@ -11,7 +11,7 @@ const routes: AppRouteRecord[] = [
     path: 'cart',
     name: 'ecommerce.cart',
     component: () => import('./pages/CartPage.vue'),
-    meta: { nav: { title: 'Cart', icon: ShoppingCart, order: 31 } },
+    meta: { module: 'ecommerce', nav: { title: 'Cart', icon: ShoppingCart, order: 31 } },
   },
 ]
 

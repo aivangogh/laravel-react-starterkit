@@ -31,6 +31,15 @@ export interface AppRouteMeta {
   guestOnly?: boolean
   /** Permission the user must hold; missing it redirects to `forbidden`. Gates the nav item too. */
   permission?: string
+  /**
+   * The optional install module this route belongs to (e.g. `'ecommerce'`). When set, the route +
+   * its nav item are additionally gated by the runtime install flag: hidden in the nav and
+   * redirected to `home` by the guard unless the module is enabled (see
+   * {@link useAppConfig}'s `isModuleEnabled`). The PRIMARY gate is still file-presence — the stub
+   * is only copied into `src/features/` for the matching preset — so a Basic build ships no
+   * module code at all; this flag is a second layer for a mounted-but-disabled module.
+   */
+  module?: string
   /** Set to surface this route in the app sidebar/nav. */
   nav?: AppNavMeta
 }
@@ -47,4 +56,6 @@ export interface NavItem {
   order: number
   /** Permission gating visibility; `undefined` means always visible. */
   permission?: string
+  /** Install module gating visibility; `undefined` means not module-gated (always visible). */
+  module?: string
 }

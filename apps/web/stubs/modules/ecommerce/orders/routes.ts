@@ -13,6 +13,7 @@ const routes: AppRouteRecord[] = [
     name: 'ecommerce.orders.index',
     component: () => import('./pages/OrdersPage.vue'),
     meta: {
+      module: 'ecommerce',
       permission: 'orders.view',
       nav: { title: 'Orders', icon: Receipt, order: 52 },
     },

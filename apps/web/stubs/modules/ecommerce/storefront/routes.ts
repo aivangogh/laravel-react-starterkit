@@ -12,12 +12,13 @@ const routes: AppRouteRecord[] = [
     path: 'shop',
     name: 'ecommerce.shop',
     component: () => import('./pages/ShopPage.vue'),
-    meta: { nav: { title: 'Shop', icon: Store, order: 30 } },
+    meta: { module: 'ecommerce', nav: { title: 'Shop', icon: Store, order: 30 } },
   },
   {
     path: 'shop/:id',
     name: 'ecommerce.shop.product',
     component: () => import('./pages/ProductDetailPage.vue'),
+    meta: { module: 'ecommerce' },
   },
 ]
 

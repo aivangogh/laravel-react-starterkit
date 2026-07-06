@@ -9,12 +9,16 @@ const authState = vi.hoisted(() => ({
   fetchUser: vi.fn(),
 }))
 const canMock = vi.hoisted(() => vi.fn<(permission: string) => boolean>())
+const ensureModuleEnabledMock = vi.hoisted(() => vi.fn<(module: string) => Promise<boolean>>())
 
 vi.mock('@/features/auth/stores/auth', () => ({
   useAuthStore: () => authState,
 }))
 vi.mock('@/shared/composables/usePermissions', () => ({
   usePermissions: () => ({ can: canMock }),
+}))
+vi.mock('@/shared/composables/useAppConfig', () => ({
+  ensureModuleEnabled: ensureModuleEnabledMock,
 }))
 
 import { authGuard } from '@/app/router'
@@ -29,6 +33,7 @@ describe('authGuard', () => {
     authState.isAuthenticated = false
     authState.fetchUser.mockReset()
     canMock.mockReset().mockReturnValue(false)
+    ensureModuleEnabledMock.mockReset().mockResolvedValue(true)
   })
 
   it('redirects an unauthenticated user off a protected route to login, preserving the path', async () => {
@@ -53,6 +58,28 @@ describe('authGuard', () => {
 
     const result = await authGuard(route({ requiresAuth: true, permission: 'users.view' }))
 
+    expect(result).toBe(true)
+  })
+
+  it('redirects to home when the route belongs to a disabled install module', async () => {
+    authState.isAuthenticated = true
+    canMock.mockReturnValue(true)
+    ensureModuleEnabledMock.mockResolvedValue(false)
+
+    const result = await authGuard(route({ requiresAuth: true, module: 'ecommerce' }))
+
+    expect(ensureModuleEnabledMock).toHaveBeenCalledWith('ecommerce')
+    expect(result).toEqual({ name: 'home' })
+  })
+
+  it('allows a route whose install module is enabled', async () => {
+    authState.isAuthenticated = true
+    canMock.mockReturnValue(true)
+    ensureModuleEnabledMock.mockResolvedValue(true)
+
+    const result = await authGuard(route({ requiresAuth: true, module: 'ecommerce' }))
+
+    expect(ensureModuleEnabledMock).toHaveBeenCalledWith('ecommerce')
     expect(result).toBe(true)
   })
 
