@@ -38,6 +38,18 @@ describe('usePermissions', () => {
     expect(roles.value).toEqual(['admin'])
   })
 
+  it('super-admin bypasses every permission check (mirrors backend Gate::before)', () => {
+    const store = useAuthStore()
+    // super-admin holds NO explicit permissions — the bypass is role-based.
+    store.user = makeUser({ roles: ['super-admin'], permissions: [] })
+
+    const { can } = usePermissions()
+
+    expect(can('users.view')).toBe(true)
+    expect(can('roles.delete')).toBe(true)
+    expect(can('anything.at.all')).toBe(true)
+  })
+
   it('defaults to false / empty when logged out', () => {
     const { can, hasRole, permissions } = usePermissions()
 
