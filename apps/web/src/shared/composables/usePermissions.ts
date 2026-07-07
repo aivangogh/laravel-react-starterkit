@@ -14,11 +14,9 @@ export function usePermissions() {
   const permissions = computed(() => user.value?.permissions ?? [])
   const roles = computed(() => user.value?.roles ?? [])
 
+  /** Delegates to the store's canonical rule (super-admin bypass included). */
   function can(permission: string): boolean {
-    // `super-admin` bypasses every permission check — mirrors the backend
-    // `Gate::before` hook (it holds no explicit permissions, so a plain
-    // `permissions.includes()` would wrongly deny it the whole UI).
-    return roles.value.includes('super-admin') || permissions.value.includes(permission)
+    return store.can(permission)
   }
 
   function hasRole(role: string): boolean {

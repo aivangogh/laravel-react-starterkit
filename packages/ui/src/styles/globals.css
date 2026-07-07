@@ -1,5 +1,11 @@
 @import 'tailwindcss';
 
+/* Scan this package's own components so utilities used ONLY inside @app/ui (e.g. the dialog's
+   `fixed top-[50%] translate-*` centering) are generated. Without this, consuming apps only emit
+   classes they also use in their own source, and @app/ui-only styles silently go missing. Paths in
+   `@source` resolve relative to THIS file, so it works for every app that imports these styles. */
+@source '../';
+
 @custom-variant dark (&:is(.dark *));
 
 :root {

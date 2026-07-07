@@ -8,9 +8,14 @@ import type { ApiError } from '@app/types'
  * Sanctum SPA cookie auth: `withCredentials` sends the session cookie, and axios mirrors the
  * `XSRF-TOKEN` cookie (url-decoded) into the `X-XSRF-TOKEN` header. `withXSRFToken: true` forces
  * that even cross-origin (the SPA and API run on different ports = different origins).
+ *
+ * `baseURL` is the bare API host (no `/api` suffix): API calls pass `/api/...` and Fortify actions
+ * hit the root (`/login`, `/register`). It comes from `VITE_API_URL`, defaulting to the local dev
+ * API so `pnpm dev` works out of the box. Use `localhost` (not 127.0.0.1) so the session cookie,
+ * scoped to `SESSION_DOMAIN=localhost`, round-trips. Override via `apps/web/.env` (see .env.example).
  */
 export const http = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
+  baseURL: import.meta.env.VITE_API_URL ?? 'http://localhost:8000',
   withCredentials: true,
   withXSRFToken: true,
   headers: {

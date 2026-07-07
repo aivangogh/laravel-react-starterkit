@@ -88,14 +88,42 @@ What's done, and what remains — in build order.
       (pages/composables/stores); gated by the installer flag.
 
 ### Phase 8 — Verification
+Scope: verify the **Basic** preset end to end against the live stack, and keep both presets green
+across every check. The **live** E-commerce installer round-trip depends on `kit:install`
+stub-publishing (not yet built) and is deferred to Phase 9; here, E-commerce is verified at the
+test-suite level (`composer test` + `pnpm test:unit` exercise the in-place module stub).
+
 - [ ] `pnpm db:up` → backend on Postgres+Redis; `pnpm dev` → web + API.
-- [ ] Install **Basic** → register/login (Sanctum cookie) → RBAC enforcement (403 for missing perms)
-      → activity log shows actions.
-- [ ] Re-run installer → **E-commerce** → product/category/order CRUD + pages appear; sample data seeded.
+- [ ] **Basic** live flow, driven by a Playwright E2E suite (`apps/web/e2e/`, against `localhost`):
+      register/login (Sanctum cookie) → RBAC enforcement (no-permission user redirected to
+      `/forbidden`, gated nav hidden) → activity log reflects actions → users CRUD round-trip →
+      page-level smoke of every base feature.
+- [ ] E-commerce verified at the test-suite level (backend 141 + FE unit 107); the live preset
+      round-trip (`kit:install` → product/category/order CRUD + pages appear + sample data) moves to
+      Phase 9, which is where the publishing step is implemented.
 - [ ] `pnpm lint`, `pnpm type-check`, `pnpm test:unit`, `pnpm test:e2e`, `composer test` all green.
+
+> Three real, user-facing defects surfaced and fixed here:
+> 1. **SPA could not reach the API** — no `VITE_API_URL` default (and `.env.example` had the wrong
+>    port), so a fresh `pnpm dev` hit the Vite origin. Fixed with a `http://localhost:8000` default
+>    in the axios client + an aligned `.env.example`.
+> 2. **`v-can` hid every gated control from the super-admin** — the directive lacked the super-admin
+>    bypass that `usePermissions().can()` has. Fixed by routing both through one canonical
+>    `authStore.can()`.
+> 3. **All modals rendered off-screen** — Tailwind v4 was not scanning `packages/ui`, so utilities
+>    used only inside `@app/ui` (the dialog's `fixed top-[50%] translate-*` centering) were never
+>    generated. Fixed with a `@source` in the shared `globals.css`.
+>
+> Also: the login rate limiter is now strict only in production (relaxed elsewhere so dev + E2E can
+> log in repeatedly), and modal dialogs cap their height and scroll so actions stay reachable.
 
 ### Phase 9 — One-command installer ([installer.md](installer.md))
 > Ships **last** — the scaffolder clones the finished, verified template, so it depends on Phases 0–8.
+- [ ] **`kit:install` stub-publishing** (the missing steps 4–5 of [modules.md](modules.md)): copy the
+      backend stub (`app`/`database`/`routes/modules/ecommerce.php`) and the frontend stub
+      (`apps/web/src/features/ecommerce/`) into place for the E-commerce preset, register its routes,
+      and let its migrations run outside the `testing` env. Today the module runs test-only; this is
+      what makes the **live** preset round-trip work. Verify it end to end (E-commerce E2E).
 - [ ] `scripts/setup.mjs` + root `pnpm setup` script — idempotent orchestrator: preflight (assert
       **PHP ≥ 8.4**), backend `.env`/`composer install`/`key:generate`, data layer (Docker → SQLite
       fallback), `migrate`, `pnpm install` + build shared packages, hand off to `kit:install`, print
