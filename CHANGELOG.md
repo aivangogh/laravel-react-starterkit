@@ -9,7 +9,7 @@ features and **patch** bumps as fixes/config.
 > updates are **not** automatic. New scaffolds pick up the latest tag; existing projects apply the
 > per-release **Upgrading** notes below by hand.
 
-## [0.1.1] - Unreleased
+## [0.1.1] - 2026-07-07
 
 ### Changed
 
