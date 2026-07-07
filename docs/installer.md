@@ -1,8 +1,11 @@
-# One-Command Installer (Planned)
+# One-Command Installer
 
-> **Status:** design only — **chosen approach locked, not yet built.** This is a *late* phase: the
-> public scaffolder clones the **finished, verified** template, so it depends on Phases 0–8 being
-> complete. See [roadmap.md](roadmap.md) (Phase 9). Captured now so the decision survives.
+> **Status:** built (Phase 9). `scripts/setup.mjs` (`pnpm run setup`) and the
+> `create-laravel-vue-starterkit` scaffolder are implemented; publishing a release tag + the public
+> npm package is the final step (#33). See [roadmap.md](roadmap.md) (Phase 9).
+>
+> **Note:** the orchestrator is invoked as **`pnpm run setup`**, not `pnpm setup` — the latter is
+> pnpm's own built-in command and would shadow the script.
 
 ## Goal
 
@@ -33,9 +36,9 @@ The installer is deliberately split so the heavy lifting is reusable:
 ```
 create-laravel-vue-starterkit   (npm package — the "outer wrapper")
   └─ fetch template → run ↓
-scripts/setup.mjs               (in-repo orchestrator — "pnpm setup")
-  └─ deps + data layer + migrate + build → hand off to ↓
-php artisan kit:install         (app shaping — preset/module stubs + seed)
+scripts/setup.mjs               (in-repo orchestrator — "pnpm run setup")
+  └─ deps + data layer → hand off to ↓
+php artisan kit:install         (app shaping — moves the preset's module stub into place + seed)
 ```
 
 ### Layer 1 — the scaffolder (`create-laravel-vue-starterkit`)
@@ -46,12 +49,12 @@ A tiny Node `bin` published to npm. Responsibilities **only**:
 2. **Fetch the template** — degit/tiged the GitHub repo **at a release tag** (no `.git` history, no
    `node_modules`/`vendor`). Pinning to a tag keeps `create` reproducible.
 3. Light prompts: project name, preset (`basic` | `ecommerce`) — passed through to `kit:install`.
-4. Shell out to **`pnpm setup`** (Layer 2). Nothing else lives here.
+4. Shell out to **`pnpm run setup`** (Layer 2). Nothing else lives here.
 
 Keeping it thin means the same setup logic is shared by `create`, by "Use this template" clones, and
 by CI — no drift.
 
-### Layer 2 — the orchestrator (`pnpm setup` → `scripts/setup.mjs`)
+### Layer 2 — the orchestrator (`pnpm run setup` → `scripts/setup.mjs`)
 
 A cross-platform Node script (Node is guaranteed present; a bash script would break on Windows — this
 is a Windows-primary project). **Idempotent** — safe to re-run. Steps, in order:

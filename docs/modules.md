@@ -1,7 +1,8 @@
-# Modules & the `kit:install` Installer (Planned)
+# Modules & the `kit:install` Installer
 
-> **Status:** design only. This captures the intended mechanism so implementation stays consistent.
-> See [roadmap.md](roadmap.md).
+> **Status:** implemented (Phase 9). `kit:install` publishes the chosen preset's module by **moving**
+> its stub into the app (`App\Installer\ModulePublisher`) — see "Mechanism" below. This doc describes
+> the mechanism; see [installer.md](installer.md) for the surrounding `pnpm run setup` orchestration.
 
 ## Goal
 
