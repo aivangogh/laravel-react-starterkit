@@ -3,7 +3,17 @@
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Laravel\Sanctum\Http\Middleware\AuthenticateSession;
-use Laravel\Sanctum\Sanctum;
+
+// Hosts that receive stateful (cookie) session auth: the SPA origin(s) in FRONTEND_URL plus the API's
+// own host (APP_URL) and loopback. Derived so there is nothing to hand-sync with FRONTEND_URL/APP_URL
+// as ports change. `SANCTUM_STATEFUL_DOMAINS` overrides the whole list when you need custom hosts.
+$statefulDomains = collect([env('FRONTEND_URL', 'http://localhost:5173'), env('APP_URL', 'http://localhost:8000')])
+    ->flatMap(fn ($value) => explode(',', (string) $value))
+    ->map(fn ($origin) => preg_replace('#^https?://#', '', trim((string) $origin)))
+    ->filter()
+    ->push('localhost', '127.0.0.1', '::1')
+    ->unique()
+    ->implode(',');
 
 return [
 
@@ -18,12 +28,7 @@ return [
     |
     */
 
-    'stateful' => explode(',', env('SANCTUM_STATEFUL_DOMAINS', sprintf(
-        '%s%s',
-        'localhost,localhost:3000,127.0.0.1,127.0.0.1:8000,::1',
-        Sanctum::currentApplicationUrlWithPort(),
-        // Sanctum::currentRequestHost(),
-    ))),
+    'stateful' => explode(',', (string) env('SANCTUM_STATEFUL_DOMAINS', $statefulDomains)),
 
     /*
     |--------------------------------------------------------------------------
