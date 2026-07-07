@@ -1,6 +1,6 @@
 {
   "name": "create-laravel-vue-starterkit",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Scaffold a new Laravel 13 + Vue 3 monorepo starter kit — clones the template and bootstraps the full web + API + database stack.",
   "type": "module",
   "bin": {

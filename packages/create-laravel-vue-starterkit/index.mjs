@@ -17,9 +17,10 @@ import path from 'node:path'
 import readline from 'node:readline/promises'
 import { stdin, stdout } from 'node:process'
 
-// The release process (Phase 9.3) pins DEFAULT_REF to a tag; until then it tracks main.
+// Pinned to a release tag so `pnpm create` is reproducible. Bump this together with the package
+// version and a matching git tag on the template (see docs/installer.md → Release mechanics).
 const DEFAULT_REPO = 'DMNCDLPRT/laravel-vue-starterkit'
-const DEFAULT_REF = 'main'
+const DEFAULT_REF = 'v0.1.0'
 
 const C = { reset: '\x1b[0m', cyan: '\x1b[36m', green: '\x1b[32m', red: '\x1b[31m', dim: '\x1b[2m' }
 const die = (m) => {
