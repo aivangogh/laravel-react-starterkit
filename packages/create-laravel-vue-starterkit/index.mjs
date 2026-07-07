@@ -27,6 +27,11 @@ const die = (m) => {
   process.exit(1)
 }
 
+// Run a command via the shell (needed on Windows for pnpm.cmd / git resolution). Pass a single
+// quoted command string rather than an args array + `shell: true`, which trips Node's DEP0190.
+const line = (cmd, args) => [cmd, ...args].map((t) => (/\s/.test(t) ? `"${t}"` : t)).join(' ')
+const sh = (cmd, args, opts = {}) => spawnSync(line(cmd, args), { shell: true, ...opts })
+
 const argv = process.argv.slice(2)
 const flag = (n) => argv.includes(`--${n}`)
 const opt = (n, d) => {
@@ -66,11 +71,9 @@ async function main() {
   // 3. Fetch the template (shallow clone, then drop history) ------------------
   console.log(`\n${C.cyan}▶${C.reset} Fetching template ${C.dim}${repo}#${ref}${C.reset} …`)
   if (!has('git')) die('git is required to fetch the template. Install Git and retry.')
-  const cloned = spawnSync(
-    'git',
-    ['clone', '--depth', '1', '--branch', ref, `https://github.com/${repo}.git`, dir],
-    { stdio: 'inherit', shell: true },
-  )
+  const cloned = sh('git', ['clone', '--depth', '1', '--branch', ref, `https://github.com/${repo}.git`, dir], {
+    stdio: 'inherit',
+  })
   if (cloned.status !== 0) die(`Failed to clone ${repo}#${ref}.`)
   fs.rmSync(path.join(dir, '.git'), { recursive: true, force: true })
   console.log(`  ${C.green}✓${C.reset} Template fetched into ${dir}`)
@@ -82,10 +85,11 @@ async function main() {
 
   // 4. Hand off to the in-repo orchestrator ----------------------------------
   console.log(`\n${C.cyan}▶${C.reset} Bootstrapping (pnpm run setup) …\n`)
-  const setupArgs = ['run', 'setup', `--preset=${preset}`, '--no-interaction']
+  // `--` ensures pnpm forwards these to setup.mjs rather than parsing them itself.
+  const setupArgs = ['run', 'setup', '--', `--preset=${preset}`, '--no-interaction']
   if (flag('sqlite')) setupArgs.push('--sqlite')
   if (opt('php-bin')) setupArgs.push(`--php-bin=${opt('php-bin')}`)
-  const setup = spawnSync('pnpm', setupArgs, { stdio: 'inherit', shell: true, cwd: dir })
+  const setup = sh('pnpm', setupArgs, { stdio: 'inherit', cwd: dir })
   if (setup.status !== 0) {
     die(`Setup failed. Fix the issue above, then re-run: cd ${target} && pnpm run setup --preset=${preset}`)
   }
@@ -95,7 +99,7 @@ async function main() {
 
 function has(bin) {
   const probe = process.platform === 'win32' ? ['where', bin] : ['command', '-v', bin]
-  return spawnSync(probe[0], probe.slice(1), { stdio: 'ignore', shell: true }).status === 0
+  return sh(probe[0], probe.slice(1), { stdio: 'ignore' }).status === 0
 }
 
 main().catch((e) => die(e?.message || String(e)))
