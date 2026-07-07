@@ -6,17 +6,19 @@ The decoupled frontend for the starter kit. Vue 3 + Vite, Pinia (client state) +
 ## Setup
 
 ```bash
-cp .env.example .env        # then adjust VITE_API_URL if the API runs elsewhere
 pnpm install                # from the repo root
 pnpm --filter web dev       # http://localhost:5173
 ```
 
-`VITE_API_URL` points at the Laravel API host root (default `http://localhost:8001`). Fortify auth
-routes live at the root (`POST /login`, `/register`, ...) and the JSON API under `/api`.
+No `.env` needed to start: `vite.config.ts` derives `VITE_API_URL` from the API's single source of
+truth in `backend/.env` (`SERVER_HOST`/`SERVER_PORT`), so the SPA follows the backend port. Copy
+`.env.example` → `.env` and set `VITE_API_URL` only to override that (e.g. a standalone build, or a
+remote API). Fortify auth routes live at the root (`POST /login`, `/register`, ...) and the JSON API
+under `/api`.
 
 > **Cookies:** serve the SPA against `http://localhost` (never `127.0.0.1`). Sanctum session cookies
-> are scoped to `SESSION_DOMAIN=localhost`; add any new SPA origin to the API's
-> `SANCTUM_STATEFUL_DOMAINS` and `config/cors.php`.
+> are scoped to `SESSION_DOMAIN=localhost`. New SPA origins just need adding to `FRONTEND_URL` in
+> `backend/.env` (comma-separated) — CORS and Sanctum's stateful domains both derive from it.
 
 ## Layout
 
