@@ -22,11 +22,13 @@ class DatabaseSeeder extends Seeder
     {
         $this->call(RolePermissionSeeder::class);
 
+        // In-process installs pass creds via runtime config(); a post-publish install seeds from a
+        // fresh subprocess that instead carries them as env vars (never written to disk).
         $admin = User::updateOrCreate(
-            ['email' => config('starterkit.admin.email', 'admin@example.com')],
+            ['email' => config('starterkit.admin.email') ?? env('STARTERKIT_ADMIN_EMAIL', 'admin@example.com')],
             [
                 'name' => config('starterkit.admin.name', 'Super Admin'),
-                'password' => config('starterkit.admin.password', 'password'),
+                'password' => config('starterkit.admin.password') ?? env('STARTERKIT_ADMIN_PASSWORD', 'password'),
                 'email_verified_at' => now(),
             ],
         );
