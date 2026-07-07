@@ -101,9 +101,24 @@ The scaffolder can't bundle a PHP/Composer/Docker runtime. The host still needs 
 
 ## Release mechanics
 
-- Tag template releases (`vX.Y.Z`); the scaffolder degit-pins to a tag, not `main`.
-- Publish `create-laravel-vue-starterkit` to npm; the `create-*` name enables `pnpm/npm create`.
-- The scaffolder version and the template tag it pulls move together.
+The scaffolder's `DEFAULT_REF` and its package `version` move **together** with the template's git
+tag, so `pnpm create` is reproducible. `DEFAULT_REF` and the package version are already set to
+`v0.1.0` / `0.1.0`. To cut the release:
+
+```bash
+# 1. Tag the template at the release commit on main (the pin must already be merged) and push it —
+#    this MUST exist before anyone runs `pnpm create`, since the scaffolder clones this ref.
+git tag v0.1.0 && git push origin v0.1.0
+
+# 2. Publish the scaffolder (the `create-*` name is what enables `pnpm/npm create`).
+cd packages/create-laravel-vue-starterkit && npm publish --access public
+
+# 3. Smoke-test from the published package in a clean directory.
+cd /tmp && pnpm create laravel-vue-starterkit demo-app --preset=ecommerce
+```
+
+For the next release, bump all three in lockstep: the git tag, `DEFAULT_REF`, and the package
+`version`.
 
 ## Build order
 
