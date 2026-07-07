@@ -10,9 +10,11 @@ import type { ApiError } from '@app/types'
  * that even cross-origin (the SPA and API run on different ports = different origins).
  *
  * `baseURL` is the bare API host (no `/api` suffix): API calls pass `/api/...` and Fortify actions
- * hit the root (`/login`, `/register`). It comes from `VITE_API_URL`, defaulting to the local dev
- * API so `pnpm dev` works out of the box. Use `localhost` (not 127.0.0.1) so the session cookie,
- * scoped to `SESSION_DOMAIN=localhost`, round-trips. Override via `apps/web/.env` (see .env.example).
+ * hit the root (`/login`, `/register`). It comes from `VITE_API_URL`, which vite.config.ts derives
+ * from the single source of truth in `backend/.env` (SERVER_HOST/SERVER_PORT) so `pnpm dev` works
+ * out of the box and follows the backend port. Use `localhost` (not 127.0.0.1) so the session
+ * cookie, scoped to `SESSION_DOMAIN=localhost`, round-trips. Override via `apps/web/.env` (see
+ * .env.example); the literal below is only the last-resort default when neither is available.
  */
 export const http = axios.create({
   baseURL: import.meta.env.VITE_API_URL ?? 'http://localhost:8000',
