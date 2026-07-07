@@ -177,10 +177,14 @@ function shapeApp() {
 }
 
 function nextSteps() {
+  // Read the configured origins straight from backend/.env (SERVER_HOST/SERVER_PORT are literals; the
+  // SPA and CORS derive from these same values) so the printed URLs always match the real setup.
+  const apiUrl = `http://${getEnv('SERVER_HOST') || 'localhost'}:${getEnv('SERVER_PORT') || '8000'}`
+  const webUrl = (getEnv('FRONTEND_URL') || 'http://localhost:5173').split(',')[0].trim()
   console.log(`\n${C.green}✓ The starter kit is set up.${C.reset}`)
   console.log(`\n  Start it with:  ${C.cyan}pnpm dev${C.reset}`)
-  console.log(`  Web:            ${C.dim}http://localhost:5173${C.reset}`)
-  console.log(`  API:            ${C.dim}http://localhost:8000${C.reset}`)
+  console.log(`  Web:            ${C.dim}${webUrl}${C.reset}`)
+  console.log(`  API:            ${C.dim}${apiUrl}${C.reset}`)
   console.log(`  Sign in:        ${C.dim}admin@example.com / password${C.reset} (unless you changed it)\n`)
 }
 
