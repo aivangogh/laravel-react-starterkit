@@ -119,19 +119,22 @@ test-suite level (`composer test` + `pnpm test:unit` exercise the in-place modul
 
 ### Phase 9 — One-command installer ([installer.md](installer.md))
 > Ships **last** — the scaffolder clones the finished, verified template, so it depends on Phases 0–8.
-- [ ] **`kit:install` stub-publishing** (the missing steps 4–5 of [modules.md](modules.md)): copy the
-      backend stub (`app`/`database`/`routes/modules/ecommerce.php`) and the frontend stub
-      (`apps/web/src/features/ecommerce/`) into place for the E-commerce preset, register its routes,
-      and let its migrations run outside the `testing` env. Today the module runs test-only; this is
-      what makes the **live** preset round-trip work. Verify it end to end (E-commerce E2E).
-- [ ] `scripts/setup.mjs` + root `pnpm setup` script — idempotent orchestrator: preflight (assert
-      **PHP ≥ 8.4**), backend `.env`/`composer install`/`key:generate`, data layer (Docker → SQLite
-      fallback), `migrate`, `pnpm install` + build shared packages, hand off to `kit:install`, print
-      next steps. *(Can be grown incrementally as Phases 1/5 land; verified in Phase 8.)*
-- [ ] `create-laravel-vue-starterkit` npm package — thin Node `bin`: degit template **at a tag** →
-      prompt name/preset → run `pnpm setup --no-interaction`. Published so `pnpm create` works.
-- [ ] Tag a template release; pin the scaffolder to it; smoke-test `pnpm create laravel-vue-starterkit`
-      in a clean dir.
+- [x] **`kit:install` stub-publishing** — `App\Installer\ModulePublisher` **moves** the backend stub
+      (`app`/`database`/`routes/modules/ecommerce.php`) and the frontend stub
+      (`apps/web/src/features/ecommerce/`) into place for the E-commerce preset (moving, not copying,
+      avoids duplicate-class + double-migration; see [modules.md](modules.md)). A fresh publish
+      re-dumps Composer and migrates + seeds in a subprocess. Verified live end to end.
+- [x] `scripts/setup.mjs` + root `pnpm run setup` — idempotent orchestrator: preflight (Node/pnpm/
+      Composer + runtime **PHP ≥ 8.4** with `--php-bin`/`STARTERKIT_PHP` override), backend
+      `.env`/`composer install`/`key:generate`, data layer (Docker → SQLite fallback), `pnpm install`,
+      hand off to `kit:install`, print next steps. *(`pnpm run setup`, not `pnpm setup` — the latter is
+      a pnpm built-in.)*
+- [x] `create-laravel-vue-starterkit` npm package — thin, dependency-free Node `bin`:
+      `git clone --depth 1` the template at a ref → drop `.git` → prompt name/preset →
+      `pnpm run setup`. Verified via a full local scaffold (E-commerce, SQLite).
+- [ ] **Release (yours):** tag a template release, pin the scaffolder's `DEFAULT_REF` to it,
+      `npm publish` `create-laravel-vue-starterkit`, and smoke-test `pnpm create laravel-vue-starterkit`
+      in a clean dir. See [installer.md](installer.md) → Release mechanics.
 
 ## Notes / gotchas discovered
 

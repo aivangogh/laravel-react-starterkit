@@ -9,6 +9,7 @@
     "pnpm": ">=10"
   },
   "scripts": {
+    "setup": "node scripts/setup.mjs",
     "dev": "concurrently --kill-others-on-fail --names api,web --prefix-colors blue,cyan \"pnpm dev:api\" \"pnpm dev:web\"",
     "dev:api": "cd backend && php artisan serve",
     "dev:web": "pnpm --filter web dev",
