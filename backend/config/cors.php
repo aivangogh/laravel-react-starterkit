@@ -13,7 +13,7 @@ return [
     |
     | `allowed_origins` is derived from FRONTEND_URL, which accepts a
     | comma-separated list so several origins (e.g. dev + prod) are allowed:
-    |   FRONTEND_URL=http://localhost:5173,https://app.example.com
+    |   FRONTEND_URL=http://localhost:5174,https://app.example.com
     |
     */
 
@@ -34,7 +34,7 @@ return [
 
     'allowed_origins' => array_values(array_filter(array_map(
         'trim',
-        explode(',', (string) env('FRONTEND_URL', 'http://localhost:5173')),
+        explode(',', (string) env('FRONTEND_URL', 'http://localhost:5174')),
     ))),
 
     'allowed_origins_patterns' => [],
