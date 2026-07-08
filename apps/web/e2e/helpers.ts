@@ -20,9 +20,12 @@ export function uniqueEmail(prefix = 'e2e'): string {
   return `${prefix}-${Date.now()}-${Math.floor(Math.random() * 1e6)}@example.com`
 }
 
-/** The visible desktop sidebar (the mobile drawer shares the same nav but stays closed at md+). */
+/**
+ * The visible desktop sidebar. The shadcn-vue `Sidebar` tags its root with `data-slot="sidebar"`;
+ * at md+ only the desktop variant renders (the mobile drawer is a Sheet that stays closed).
+ */
 export function sidebar(page: Page): Locator {
-  return page.locator('aside[aria-label="Sidebar"]')
+  return page.locator('[data-slot="sidebar"]')
 }
 
 /** True once the authenticated shell is on screen — the account menu only renders when signed in. */

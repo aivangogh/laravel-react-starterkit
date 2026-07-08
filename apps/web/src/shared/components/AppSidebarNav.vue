@@ -1,32 +1,46 @@
 <script setup lang="ts">
-import type { HTMLAttributes } from 'vue'
-import { RouterLink } from 'vue-router'
-import { cn } from '@app/ui/lib/utils'
+import { RouterLink, useRoute } from 'vue-router'
+import {
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  useSidebar,
+} from '@app/ui/components/ui/sidebar'
 import { useNavItems } from '@/shared/composables/useNavItems'
 
-interface Props {
-  class?: HTMLAttributes['class']
-}
-const props = defineProps<Props>()
-
-/** Emitted after a nav link is chosen — lets the mobile drawer close itself. */
-const emit = defineEmits<{ navigate: [] }>()
-
+const route = useRoute()
 const { items } = useNavItems()
+const { isMobile, setOpenMobile } = useSidebar()
+
+/**
+ * Whether a nav item points at the current route. Exact match on the route name (mirrors the old
+ * `exact-active-class`), so a child route like `users.edit` never lights up the `users` item.
+ */
+function isActive(name: string): boolean {
+  return route.name === name
+}
+
+/** On mobile the sidebar is a drawer — close it once the user picks a destination. */
+function onNavigate(): void {
+  if (isMobile.value) setOpenMobile(false)
+}
 </script>
 
 <template>
-  <nav :class="cn('flex flex-col gap-1', props.class)" aria-label="Main">
-    <RouterLink
-      v-for="item in items"
-      :key="item.name"
-      :to="{ name: item.name }"
-      class="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-      exact-active-class="bg-accent text-accent-foreground"
-      @click="emit('navigate')"
-    >
-      <component :is="item.icon" v-if="item.icon" class="size-4 shrink-0" aria-hidden="true" />
-      <span>{{ item.title }}</span>
-    </RouterLink>
-  </nav>
+  <SidebarGroup>
+    <SidebarGroupContent>
+      <SidebarMenu aria-label="Main">
+        <SidebarMenuItem v-for="item in items" :key="item.name">
+          <SidebarMenuButton as-child :is-active="isActive(item.name)" :tooltip="item.title">
+            <RouterLink :to="{ name: item.name }" @click="onNavigate">
+              <component :is="item.icon" v-if="item.icon" aria-hidden="true" />
+              <span>{{ item.title }}</span>
+            </RouterLink>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      </SidebarMenu>
+    </SidebarGroupContent>
+  </SidebarGroup>
 </template>

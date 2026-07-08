@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 import { RouterLink, RouterView, useRouter } from 'vue-router'
-import { LogOut, Menu, User } from 'lucide-vue-next'
+import { LogOut, Rocket, User } from 'lucide-vue-next'
 import { Avatar, AvatarFallback, AvatarImage } from '@app/ui/components/ui/avatar'
 import { Button } from '@app/ui/components/ui/button'
 import {
@@ -12,14 +12,18 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@app/ui/components/ui/dropdown-menu'
-import { Separator } from '@app/ui/components/ui/separator'
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from '@app/ui/components/ui/sheet'
+  Sidebar,
+  SidebarContent,
+  SidebarHeader,
+  SidebarInset,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
+  SidebarRail,
+  SidebarTrigger,
+} from '@app/ui/components/ui/sidebar'
 import AppSidebarNav from '@/shared/components/AppSidebarNav.vue'
 import { useAuth } from '@/features/auth/composables/useAuth'
 
@@ -27,9 +31,6 @@ const APP_NAME = 'Starter Kit'
 
 const router = useRouter()
 const { user, logoutMutation } = useAuth()
-
-/** Controls the mobile navigation drawer. */
-const mobileNavOpen = ref(false)
 
 /** Two-letter fallback for the avatar, derived from the user's name. */
 const initials = computed(() => {
@@ -52,38 +53,39 @@ function onLogout() {
 </script>
 
 <template>
-  <div class="flex min-h-screen bg-background text-foreground">
-    <!-- Desktop sidebar -->
-    <aside class="hidden w-64 shrink-0 flex-col border-r bg-card md:flex" aria-label="Sidebar">
-      <div class="flex h-14 items-center px-6">
-        <RouterLink :to="{ name: 'home' }" class="text-lg font-semibold tracking-tight">
-          {{ APP_NAME }}
-        </RouterLink>
-      </div>
-      <Separator />
-      <AppSidebarNav class="flex-1 overflow-y-auto p-3" />
-    </aside>
+  <SidebarProvider>
+    <!-- Collapsible-to-icon sidebar; rail + Ctrl/Cmd+B toggle it, state persists via cookie. -->
+    <Sidebar collapsible="icon">
+      <SidebarHeader>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton as-child size="lg">
+              <RouterLink :to="{ name: 'home' }">
+                <div
+                  class="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground"
+                >
+                  <Rocket class="size-4" />
+                </div>
+                <span class="truncate font-semibold">{{ APP_NAME }}</span>
+              </RouterLink>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarHeader>
 
-    <div class="flex min-w-0 flex-1 flex-col">
+      <SidebarContent>
+        <AppSidebarNav />
+      </SidebarContent>
+
+      <SidebarRail />
+    </Sidebar>
+
+    <SidebarInset>
       <!-- Topbar -->
       <header
         class="sticky top-0 z-30 flex h-14 items-center gap-2 border-b bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/60"
       >
-        <!-- Mobile nav trigger + drawer -->
-        <Sheet v-model:open="mobileNavOpen">
-          <SheetTrigger as-child>
-            <Button variant="ghost" size="icon" class="md:hidden" aria-label="Open navigation">
-              <Menu class="size-5" />
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="left" class="w-72 p-0">
-            <SheetHeader class="h-14 justify-center px-6 text-left">
-              <SheetTitle>{{ APP_NAME }}</SheetTitle>
-            </SheetHeader>
-            <Separator />
-            <AppSidebarNav class="p-3" @navigate="mobileNavOpen = false" />
-          </SheetContent>
-        </Sheet>
+        <SidebarTrigger class="-ml-1" aria-label="Toggle sidebar" />
 
         <RouterLink :to="{ name: 'home' }" class="font-semibold md:hidden">
           {{ APP_NAME }}
@@ -134,9 +136,9 @@ function onLogout() {
       </header>
 
       <!-- Routed page content -->
-      <main class="flex-1 p-4 md:p-6">
+      <div class="flex-1 p-4 md:p-6">
         <RouterView />
-      </main>
-    </div>
-  </div>
+      </div>
+    </SidebarInset>
+  </SidebarProvider>
 </template>
