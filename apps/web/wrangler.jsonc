@@ -1,0 +1,16 @@
+// Cloudflare Worker serving the built SPA as static assets.
+// Replace example.com with your zone. Build first with the prod API origin:
+//   VITE_API_URL=https://api.example.com pnpm --filter web build
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "starterkit-web",
+  "compatibility_date": "2026-07-01",
+  "routes": [
+    { "pattern": "app.example.com/*", "zone_name": "example.com" }
+  ],
+  "assets": {
+    "directory": "./dist",
+    // History-mode router: serve index.html for unknown paths.
+    "not_found_handling": "single-page-application"
+  }
+}
