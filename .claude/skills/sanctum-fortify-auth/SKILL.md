@@ -12,7 +12,7 @@ cookie carries auth. This is wired and verified end-to-end (CSRF → register �
 ## The flow
 
 ```
-SPA (origin http://localhost:5173)            API (http://localhost:8000)
+SPA (origin http://localhost:5174)            API (http://localhost:8000)
   GET  /sanctum/csrf-cookie   ───────────────▶  sets XSRF-TOKEN + session cookie
   POST /login | /register     ───────────────▶  Fortify authenticates, starts the web session
   GET  /api/user              ───────────────▶  returns the authenticated user (auth:sanctum)
@@ -66,7 +66,7 @@ SPA (origin http://localhost:5173)            API (http://localhost:8000)
 Run the API on a free port, then (PHP 8.4 on PATH for the url-decode helper):
 
 ```bash
-JAR=$(mktemp); BASE=http://localhost:8001; ORIGIN=http://localhost:5173
+JAR=$(mktemp); BASE=http://localhost:8001; ORIGIN=http://localhost:5174
 curl -s -c "$JAR" -H "Origin: $ORIGIN" "$BASE/sanctum/csrf-cookie" -o /dev/null -w "%{http_code}\n"   # 204
 TOKEN=$(php -r 'echo urldecode($argv[1]);' "$(awk '$6=="XSRF-TOKEN"{print $7}' "$JAR")")
 curl -s -c "$JAR" -b "$JAR" -H "Origin: $ORIGIN" -H "Accept: application/json" \

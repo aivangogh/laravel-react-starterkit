@@ -20,6 +20,11 @@ return Application::configure(basePath: dirname(__DIR__))
         // domains (SANCTUM_STATEFUL_DOMAINS) via the session cookie.
         $middleware->statefulApi();
 
+        // Behind Cloudflare (or any TLS-terminating proxy) the app only sees
+        // plain HTTP; trusting the proxy's X-Forwarded-* headers keeps URL
+        // generation and secure-cookie detection on https.
+        $middleware->trustProxies(at: env('TRUSTED_PROXIES'));
+
         // Spatie Permission route middleware aliases.
         $middleware->alias([
             'role' => RoleMiddleware::class,

@@ -1,0 +1,16 @@
+{
+  "name": "@app/api-worker",
+  "private": true,
+  "description": "Cloudflare Worker + Container fronting the Laravel API",
+  "scripts": {
+    "deploy": "wrangler deploy",
+    "tail": "wrangler tail"
+  },
+  "dependencies": {
+    "@cloudflare/containers": "^0.0.28"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20260501.0",
+    "wrangler": "^4.30.0"
+  }
+}

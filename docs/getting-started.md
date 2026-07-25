@@ -84,7 +84,7 @@ php artisan serve          # http://127.0.0.1:8000  (use a free port, e.g. --por
 ## 4. Run the web app  *[planned]*
 
 ```bash
-pnpm dev                   # apps/web on Vite (http://localhost:5173)
+pnpm dev                   # apps/web on Vite (http://localhost:5174)
 ```
 
 Common workspace scripts (planned root `package.json`):
@@ -104,6 +104,6 @@ pnpm test:e2e     # playwright
 |---|---|
 | Backend boots | `php artisan about` → Laravel 13.17.0 / PHP 8.4.22 **[works now]** |
 | Migrations | `php artisan migrate:status` → all "Ran" **[works now]** |
-| Web | `http://localhost:5173` **[planned]** |
+| Web | `http://localhost:5174` **[planned]** |
 | Postgres | `psql` against `localhost:5432` with `backend/.env` creds **[planned]** |
 | Redis | `redis-cli ping` → `PONG` **[planned]** |

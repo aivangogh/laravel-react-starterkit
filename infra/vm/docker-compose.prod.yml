@@ -1,0 +1,86 @@
+# Full stack for a single Linux VM (AWS EC2, Oracle Always Free, any VPS;
+# arm64 or x86).
+# TLS + DNS are handled by a Cloudflare Tunnel (cloudflared) — no open ports
+# on the VM beyond SSH, no certificates to manage.
+#
+#   cp .env.example .env   # fill in secrets first
+#   docker compose -f docker-compose.prod.yml up -d --build
+name: starterkit-prod
+
+services:
+  app:
+    build:
+      context: ../../backend
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      APP_ENV: staging
+      APP_DEBUG: "false"
+      DB_CONNECTION: pgsql
+      DB_URL: postgresql://${DB_USERNAME:-starterkit}:${DB_PASSWORD:?set in .env}@postgres:5432/${DB_DATABASE:-starterkit}
+      REDIS_CLIENT: predis
+      REDIS_URL: redis://redis:6379
+      SESSION_DRIVER: redis
+      CACHE_STORE: redis
+      QUEUE_CONNECTION: redis
+      SESSION_SECURE_COOKIE: "true"
+      TRUSTED_PROXIES: "*"
+      LOG_CHANNEL: stderr
+    volumes:
+      # Keep uploads (medialibrary) across container rebuilds.
+      - starterkit-app-storage:/app/storage/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/up || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: ${TUNNEL_TOKEN:?set in .env}
+    depends_on:
+      app:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-starterkit}
+      POSTGRES_USER: ${DB_USERNAME:-starterkit}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?set in .env}
+    volumes:
+      - starterkit-postgres-data:/var/lib/postgresql/data
+      - ../../docker/postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-starterkit} -d ${DB_DATABASE:-starterkit}"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
+    volumes:
+      - starterkit-redis-data:/data
+      - ../../docker/redis/redis.conf:/usr/local/etc/redis/redis.conf:ro
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+volumes:
+  starterkit-app-storage:
+  starterkit-postgres-data:
+  starterkit-redis-data:

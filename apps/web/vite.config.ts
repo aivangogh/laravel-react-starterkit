@@ -51,6 +51,7 @@ export default defineConfig({
   server: {
     // Serve on localhost (NOT 127.0.0.1) so Sanctum's localhost-scoped cookies round-trip.
     host: 'localhost',
-    port: 5173,
+    // Must match the port in backend/.env `FRONTEND_URL` (Sanctum stateful + CORS derive from it).
+    port: 5174,
   },
 })

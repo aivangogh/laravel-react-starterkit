@@ -7,7 +7,7 @@ The decoupled frontend for the starter kit. Vue 3 + Vite, Pinia (client state) +
 
 ```bash
 pnpm install                # from the repo root
-pnpm --filter web dev       # http://localhost:5173
+pnpm --filter web dev       # http://localhost:5174
 ```
 
 No `.env` needed to start: `vite.config.ts` derives `VITE_API_URL` from the API's single source of
