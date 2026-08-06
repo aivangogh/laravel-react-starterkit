@@ -1,0 +1,37 @@
+name: Git checks
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  conventions:
+    name: Commit & branch conventions
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Check PR title
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: node .github/scripts/check-git-conventions.mjs title "$PR_TITLE"
+
+      - name: Check branch name
+        env:
+          BRANCH: ${{ github.head_ref }}
+        run: node .github/scripts/check-git-conventions.mjs branch "$BRANCH"
+
+      - name: Check commit messages
+        run: >
+          node .github/scripts/check-git-conventions.mjs commits
+          ${{ github.event.pull_request.base.sha }}
+          ${{ github.event.pull_request.head.sha }}
