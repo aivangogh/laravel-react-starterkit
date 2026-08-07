@@ -19,7 +19,7 @@ Instead, report them privately via GitHub's security advisory feature:
 2. Click **Report a vulnerability** to open a private advisory.
 3. Include as much detail as possible: affected version, steps to reproduce, impact, and any suggested fix.
 
-Alternatively, you can email the maintainer at **krmediante27@gmail.com** with the subject line `[SECURITY] laravel-vue-starterkit`.
+Alternatively, you can email the maintainer at **dmncdlprt@gmail.com** with the subject line `[SECURITY] laravel-vue-starterkit`.
 
 ### What to expect
 
