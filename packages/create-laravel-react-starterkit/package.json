@@ -1,0 +1,24 @@
+{
+  "name": "create-laravel-react-starterkit",
+  "version": "0.1.1",
+  "description": "Scaffold a new Laravel 13 + React 19 monorepo starter kit — clones the template and bootstraps the full web + API + database stack.",
+  "type": "module",
+  "bin": {
+    "create-laravel-react-starterkit": "index.mjs"
+  },
+  "files": [
+    "index.mjs",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "keywords": [
+    "laravel",
+    "react",
+    "starter-kit",
+    "monorepo",
+    "create"
+  ],
+  "license": "MIT"
+}

@@ -1,12 +1,12 @@
 #!/usr/bin/env node
-// The published `create-laravel-vue-starterkit` scaffolder (Layer 1). Deliberately thin and
+// The published `create-laravel-react-starterkit` scaffolder (Layer 1). Deliberately thin and
 // dependency-free: it fetches the template at a pinned ref and hands the heavy lifting to the
 // in-repo `pnpm run setup` (Layer 2). Keeping it thin means `create`, "Use this template" clones,
 // and CI all share the same setup logic — no drift.
 //
-//   pnpm create laravel-vue-starterkit my-app
-//   npm  create laravel-vue-starterkit@latest my-app
-//   npx  create-laravel-vue-starterkit my-app --preset=ecommerce
+//   pnpm create laravel-react-starterkit my-app
+//   npm  create laravel-react-starterkit@latest my-app
+//   npx  create-laravel-react-starterkit my-app --preset=ecommerce
 //
 // Flags: --preset=basic|ecommerce  --ref=<git-ref>  --repo=<owner/repo>  --sqlite
 //        --php-bin=<path>  --no-setup (clone only)  --no-interaction
@@ -19,7 +19,7 @@ import { stdin, stdout } from 'node:process'
 
 // Pinned to a release tag so `pnpm create` is reproducible. Bump this together with the package
 // version and a matching git tag on the template (see docs/installer.md → Release mechanics).
-const DEFAULT_REPO = 'DMNCDLPRT/laravel-vue-starterkit'
+const DEFAULT_REPO = 'aivangogh/laravel-react-starterkit'
 const DEFAULT_REF = 'v0.1.1'
 
 const C = { reset: '\x1b[0m', cyan: '\x1b[36m', green: '\x1b[32m', red: '\x1b[31m', dim: '\x1b[2m' }
@@ -46,7 +46,7 @@ const ref = opt('ref', DEFAULT_REF)
 const noInteraction = flag('no-interaction')
 
 async function main() {
-  console.log(`\n${C.cyan}create-laravel-vue-starterkit${C.reset}\n`)
+  console.log(`\n${C.cyan}create-laravel-react-starterkit${C.reset}\n`)
 
   const rl = noInteraction ? null : readline.createInterface({ input: stdin, output: stdout })
   const ask = async (q, d) => {

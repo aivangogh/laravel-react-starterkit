@@ -1,12 +1,12 @@
-# create-laravel-vue-starterkit
+# create-laravel-react-starterkit
 
-Scaffold a new [Laravel 13 + Vue 3 monorepo starter kit](https://github.com/DMNCDLPRT/laravel-vue-starterkit) — fetches the template and bootstraps the full web + API + database stack.
+Scaffold a new [Laravel 13 + React 19 monorepo starter kit](https://github.com/aivangogh/laravel-react-starterkit) — fetches the template and bootstraps the full web + API + database stack.
 
 ```bash
-pnpm create laravel-vue-starterkit my-app
+pnpm create laravel-react-starterkit my-app
 # or
-npm  create laravel-vue-starterkit@latest my-app
-npx  create-laravel-vue-starterkit my-app
+npm  create laravel-react-starterkit@latest my-app
+npx  create-laravel-react-starterkit my-app
 ```
 
 You'll get an interactive **preset** picker (Basic or E-commerce); then it clones the template and
@@ -17,7 +17,7 @@ runs `pnpm run setup` for you, leaving you at `pnpm dev`.
 Not a zero-dependency installer — the host needs the toolchain the kit runs on:
 
 - **PHP 8.4+** and **Composer 2** (the Laravel API)
-- **Node 22+** and **pnpm 10+** (the Vue SPA + this scaffolder)
+- **Node 22+** and **pnpm 10+** (the React SPA + this scaffolder)
 - **git** (to fetch the template)
 - **Docker** — optional; without it the kit installs on SQLite
 
@@ -41,4 +41,4 @@ Two layers, so the heavy lifting is reusable:
 2. **`pnpm run setup`** (`scripts/setup.mjs` in the template) — preflight, backend deps + env, data
    layer (Docker → SQLite fallback), frontend deps, then `php artisan kit:install`.
 
-See [`docs/installer.md`](https://github.com/DMNCDLPRT/laravel-vue-starterkit/blob/main/docs/installer.md).
+See [`docs/installer.md`](https://github.com/aivangogh/laravel-react-starterkit/blob/main/docs/installer.md).
