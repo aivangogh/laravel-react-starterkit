@@ -1,12 +1,18 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
-  "extends": "@app/config/tsconfig.vue.json",
+  "extends": "@app/config/tsconfig.react.json",
   "compilerOptions": {
+    // An app never emits declarations (the base enables them for packages).
+    "declaration": false,
+    "types": ["vite/client"],
     "paths": {
       "@/*": ["./src/*"],
       "@app/ui/*": ["../../packages/ui/src/*"],
       "@app/types": ["../../packages/types/src/index.ts"]
     }
   },
-  "include": ["env.d.ts", "src", "stubs/modules"]
+  "include": ["env.d.ts", "vitest.setup.ts", "src", "stubs/modules"],
+  // Module route files only type-check once `kit:install` moves them into src/routes/ (they reference
+  // paths that exist in the generated route tree only after that).
+  "exclude": ["stubs/modules/*/routes"]
 }

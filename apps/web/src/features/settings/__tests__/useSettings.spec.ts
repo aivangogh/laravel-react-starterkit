@@ -1,10 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { defineComponent, h } from 'vue'
-import { flushPromises, mount } from '@vue/test-utils'
-import { QueryClient, VueQueryPlugin } from '@tanstack/vue-query'
 import type { GeneralSettings } from '@app/types'
+import { renderHookWithQuery } from '@/test/utils'
 import { settingsKeys } from '@/shared/lib/query-keys'
-import { useSettings } from '@/features/settings/composables/useSettings'
+import { useSettings, useUpdateSettings } from '@/features/settings/hooks/useSettings'
 
 // Hoisted mock handles so they exist when `vi.mock`'s factory runs.
 const mocks = vi.hoisted(() => ({
@@ -24,25 +22,6 @@ const settings: GeneralSettings = {
   registration_enabled: true,
 }
 
-/** Run a composable inside a mounted component wired with a fresh vue-query client. */
-function mountComposable<T>(composable: () => T) {
-  const queryClient = new QueryClient({
-    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
-  })
-  const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries')
-  let result!: T
-  const wrapper = mount(
-    defineComponent({
-      setup() {
-        result = composable()
-        return () => h('div')
-      },
-    }),
-    { global: { plugins: [[VueQueryPlugin, { queryClient }]] } },
-  )
-  return { result, wrapper, queryClient, invalidateSpy }
-}
-
 describe('useSettings', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -52,15 +31,13 @@ describe('useSettings', () => {
   it('fetches general settings from GET /api/settings', async () => {
     mocks.get.mockResolvedValueOnce({ data: settings })
 
-    const { result } = mountComposable(() => useSettings())
-    await flushPromises()
+    const { result } = renderHookWithQuery(() => useSettings())
 
+    await vi.waitFor(() => expect(result.current.data).toEqual(settings))
     expect(mocks.get).toHaveBeenCalledWith('/api/settings')
-    expect(result.settingsQuery.data.value).toEqual(settings)
   })
 
   it('updates via PUT /api/settings and invalidates the detail key', async () => {
-    mocks.get.mockResolvedValue({ data: settings })
     const updated: GeneralSettings = {
       ...settings,
       app_name: 'Renamed',
@@ -68,20 +45,20 @@ describe('useSettings', () => {
     }
     mocks.put.mockResolvedValueOnce({ data: updated })
 
-    const { result, invalidateSpy } = mountComposable(() => useSettings())
-    await flushPromises()
+    const { result, queryClient } = renderHookWithQuery(() => useUpdateSettings())
+    const invalidate = vi.spyOn(queryClient, 'invalidateQueries')
 
     const payload = {
       app_name: 'Renamed',
       support_email: 'help@example.com',
       registration_enabled: false,
     }
-    const returned = await result.updateMutation.mutateAsync(payload)
-    await flushPromises()
+    const returned = await result.current.mutateAsync(payload)
 
     expect(mocks.ensureCsrfCookie).toHaveBeenCalledTimes(1)
     expect(mocks.put).toHaveBeenCalledWith('/api/settings', payload)
     expect(returned).toEqual(updated)
-    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: settingsKeys.detail() })
+    expect(queryClient.getQueryData(settingsKeys.detail())).toEqual(updated)
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: settingsKeys.detail() })
   })
 })
