@@ -1,9 +1,7 @@
-import { defineComponent, h } from 'vue'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { mount } from '@vue/test-utils'
-import { QueryClient, VueQueryPlugin } from '@tanstack/vue-query'
+import { renderHookWithQuery } from '@/test/utils'
 import type { Cart } from '../../types'
-import { useCart } from '../composables/useCart'
+import { useCart } from '../hooks/useCart'
 
 const mocks = vi.hoisted(() => ({
   get: vi.fn(),
@@ -51,23 +49,6 @@ const fakeCart = {
 
 const CART_KEY = ['cart', 'current']
 
-function withSetup<T>(composable: () => T) {
-  const queryClient = new QueryClient({
-    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
-  })
-  let result!: T
-  mount(
-    defineComponent({
-      setup() {
-        result = composable()
-        return () => h('div')
-      },
-    }),
-    { global: { plugins: [[VueQueryPlugin, { queryClient }]] } },
-  )
-  return { result, queryClient }
-}
-
 describe('useCart', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -79,20 +60,20 @@ describe('useCart', () => {
   })
 
   it('reads the cart via GET /api/cart and derives count + subtotal', async () => {
-    const { result } = withSetup(() => useCart())
+    const { result } = renderHookWithQuery(() => useCart())
 
     await vi.waitFor(() => expect(mocks.get).toHaveBeenCalledWith('/api/cart'))
-    await vi.waitFor(() => expect(result.items.value).toHaveLength(1))
-    expect(result.itemCount.value).toBe(2)
-    expect(result.subtotal.value).toBe(25800)
-    expect(result.isEmpty.value).toBe(false)
+    await vi.waitFor(() => expect(result.current.items).toHaveLength(1))
+    expect(result.current.itemCount).toBe(2)
+    expect(result.current.subtotal).toBe(25800)
+    expect(result.current.isEmpty).toBe(false)
   })
 
   it('adds an item via POST /api/cart/items, primes CSRF, and invalidates the cart', async () => {
-    const { result, queryClient } = withSetup(() => useCart())
+    const { result, queryClient } = renderHookWithQuery(() => useCart())
     const invalidate = vi.spyOn(queryClient, 'invalidateQueries')
 
-    await result.addItem.mutateAsync({ product_id: 'p1', quantity: 1 })
+    await result.current.addItem.mutateAsync({ product_id: 'p1', quantity: 1 })
 
     expect(mocks.ensureCsrfCookie).toHaveBeenCalledTimes(1)
     expect(mocks.post).toHaveBeenCalledWith('/api/cart/items', { product_id: 'p1', quantity: 1 })
@@ -100,20 +81,20 @@ describe('useCart', () => {
   })
 
   it('updates a line via PUT /api/cart/items/{id} and invalidates the cart', async () => {
-    const { result, queryClient } = withSetup(() => useCart())
+    const { result, queryClient } = renderHookWithQuery(() => useCart())
     const invalidate = vi.spyOn(queryClient, 'invalidateQueries')
 
-    await result.updateItem.mutateAsync({ id: 'line1', quantity: 3 })
+    await result.current.updateItem.mutateAsync({ id: 'line1', quantity: 3 })
 
     expect(mocks.put).toHaveBeenCalledWith('/api/cart/items/line1', { quantity: 3 })
     expect(invalidate).toHaveBeenCalledWith({ queryKey: CART_KEY })
   })
 
   it('removes a line via DELETE /api/cart/items/{id} and invalidates the cart', async () => {
-    const { result, queryClient } = withSetup(() => useCart())
+    const { result, queryClient } = renderHookWithQuery(() => useCart())
     const invalidate = vi.spyOn(queryClient, 'invalidateQueries')
 
-    await result.removeItem.mutateAsync('line1')
+    await result.current.removeItem.mutateAsync('line1')
 
     expect(mocks.ensureCsrfCookie).toHaveBeenCalledTimes(1)
     expect(mocks.delete).toHaveBeenCalledWith('/api/cart/items/line1')
@@ -121,10 +102,10 @@ describe('useCart', () => {
   })
 
   it('clears the cart via DELETE /api/cart and invalidates the cart', async () => {
-    const { result, queryClient } = withSetup(() => useCart())
+    const { result, queryClient } = renderHookWithQuery(() => useCart())
     const invalidate = vi.spyOn(queryClient, 'invalidateQueries')
 
-    await result.clearCart.mutateAsync()
+    await result.current.clearCart.mutateAsync()
 
     expect(mocks.delete).toHaveBeenCalledWith('/api/cart')
     expect(invalidate).toHaveBeenCalledWith({ queryKey: CART_KEY })

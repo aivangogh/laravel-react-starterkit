@@ -1,9 +1,7 @@
-import { defineComponent, h } from 'vue'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { mount } from '@vue/test-utils'
-import { QueryClient, VueQueryPlugin } from '@tanstack/vue-query'
+import { renderHookWithQuery } from '@/test/utils'
 import type { Category, Product } from '../../types'
-import { useCategories, useProduct, useProducts } from '../composables/useCatalog'
+import { useCategories, useProduct, useProducts } from '../hooks/useCatalog'
 
 const mocks = vi.hoisted(() => ({ get: vi.fn() }))
 
@@ -35,39 +33,24 @@ const fakeCategory = {
   updated_at: '2026-01-01T00:00:00Z',
 } as Category
 
-/** Mount a composable inside a throwaway component so vue-query's injection works. */
-function withSetup<T>(composable: () => T) {
-  const queryClient = new QueryClient({
-    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
-  })
-  let result!: T
-  mount(
-    defineComponent({
-      setup() {
-        result = composable()
-        return () => h('div')
-      },
-    }),
-    { global: { plugins: [[VueQueryPlugin, { queryClient }]] } },
-  )
-  return { result }
-}
-
 describe('useCatalog', () => {
   beforeEach(() => vi.clearAllMocks())
 
   it('lists products via GET /api/products forwarding the filter params', async () => {
     mocks.get.mockResolvedValue({
-      data: { data: [fakeProduct], meta: { current_page: 1, last_page: 1, per_page: 15, total: 1 } },
+      data: {
+        data: [fakeProduct],
+        meta: { current_page: 1, last_page: 1, per_page: 15, total: 1 },
+      },
     })
 
-    const { result } = withSetup(() => useProducts({ category_id: 'c1', q: 'trail' }))
+    const { result } = renderHookWithQuery(() => useProducts({ category_id: 'c1', q: 'trail' }))
 
     await vi.waitFor(() => expect(mocks.get).toHaveBeenCalled())
     expect(mocks.get).toHaveBeenCalledWith('/api/products', {
       params: { category_id: 'c1', q: 'trail' },
     })
-    await vi.waitFor(() => expect(result.data.value?.data).toEqual([fakeProduct]))
+    await vi.waitFor(() => expect(result.current.data?.data).toEqual([fakeProduct]))
   })
 
   it('lists products with empty params when no filters are given', async () => {
@@ -75,7 +58,7 @@ describe('useCatalog', () => {
       data: { data: [], meta: { current_page: 1, last_page: 1, per_page: 15, total: 0 } },
     })
 
-    withSetup(() => useProducts())
+    renderHookWithQuery(() => useProducts())
 
     await vi.waitFor(() => expect(mocks.get).toHaveBeenCalled())
     expect(mocks.get).toHaveBeenCalledWith('/api/products', { params: {} })
@@ -84,25 +67,28 @@ describe('useCatalog', () => {
   it('fetches a single product via GET /api/products/{id}', async () => {
     mocks.get.mockResolvedValue({ data: fakeProduct })
 
-    const { result } = withSetup(() => useProduct('p1'))
+    const { result } = renderHookWithQuery(() => useProduct('p1'))
 
     await vi.waitFor(() => expect(mocks.get).toHaveBeenCalledWith('/api/products/p1'))
-    await vi.waitFor(() => expect(result.data.value).toEqual(fakeProduct))
+    await vi.waitFor(() => expect(result.current.data).toEqual(fakeProduct))
   })
 
   it('does not fetch a product while the id is undefined', () => {
-    withSetup(() => useProduct(undefined))
+    renderHookWithQuery(() => useProduct(undefined))
     expect(mocks.get).not.toHaveBeenCalled()
   })
 
   it('lists categories via GET /api/categories and unwraps the page', async () => {
     mocks.get.mockResolvedValue({
-      data: { data: [fakeCategory], meta: { current_page: 1, last_page: 1, per_page: 100, total: 1 } },
+      data: {
+        data: [fakeCategory],
+        meta: { current_page: 1, last_page: 1, per_page: 100, total: 1 },
+      },
     })
 
-    const { result } = withSetup(() => useCategories())
+    const { result } = renderHookWithQuery(() => useCategories())
 
-    await vi.waitFor(() => expect(result.data.value).toEqual([fakeCategory]))
+    await vi.waitFor(() => expect(result.current.data).toEqual([fakeCategory]))
     expect(mocks.get).toHaveBeenCalledWith('/api/categories', { params: { per_page: 100 } })
   })
 })

@@ -39,8 +39,11 @@ class ModulePublisherTest extends TestCase
         $this->writeFixture($this->backend.'/stubs/modules/shop/database/factories/ProductFactory.php', '<?php // factory');
         $this->writeFixture($this->backend.'/stubs/modules/shop/routes/shop.php', '<?php // routes');
         $this->writeFixture($this->backend.'/stubs/modules/shop/README.md', '# shop');
-        $this->writeFixture($this->web.'/stubs/modules/shop/routes.ts', '// routes');
-        $this->writeFixture($this->web.'/stubs/modules/shop/pages/Index.vue', '<template />');
+        $this->writeFixture($this->web.'/stubs/modules/shop/routes/_app/shop/index.tsx', '// route');
+        $this->writeFixture($this->web.'/stubs/modules/shop/pages/ShopPage.tsx', '// page');
+
+        // An existing app route to prove the route merge keeps it.
+        $this->writeFixture($this->web.'/src/routes/_app/users.tsx', '// existing route');
     }
 
     protected function tearDown(): void
@@ -63,12 +66,14 @@ class ModulePublisherTest extends TestCase
         $this->assertFileExists($this->backend.'/database/factories/ProductFactory.php');
         $this->assertFileExists($this->backend.'/routes/modules/shop.php');
 
-        // Frontend feature landed under src/features/<m>.
-        $this->assertFileExists($this->web.'/src/features/shop/routes.ts');
-        $this->assertFileExists($this->web.'/src/features/shop/pages/Index.vue');
+        // Frontend route files merged into src/routes/; the rest landed under src/features/<m>.
+        $this->assertFileExists($this->web.'/src/routes/_app/shop/index.tsx');
+        $this->assertFileExists($this->web.'/src/features/shop/pages/ShopPage.tsx');
+        $this->assertDirectoryDoesNotExist($this->web.'/src/features/shop/routes');
 
-        // The merge preserved the pre-existing app file.
+        // The merges preserved the pre-existing app files.
         $this->assertFileExists($this->backend.'/app/Models/User.php');
+        $this->assertFileExists($this->web.'/src/routes/_app/users.tsx');
 
         // The stub is consumed on both sides.
         $this->assertDirectoryDoesNotExist($this->backend.'/stubs/modules/shop');

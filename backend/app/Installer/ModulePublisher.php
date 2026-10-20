@@ -16,7 +16,8 @@ use Illuminate\Filesystem\Filesystem;
  *   backend/stubs/modules/<m>/app/**            -> backend/app/**            (merge)
  *   backend/stubs/modules/<m>/database/**       -> backend/database/**       (merge: migrations + factories)
  *   backend/stubs/modules/<m>/routes/<m>.php    -> backend/routes/modules/<m>.php
- *   apps/web/stubs/modules/<m>/**               -> apps/web/src/features/<m>/**
+ *   apps/web/stubs/modules/<m>/routes/**        -> apps/web/src/routes/**             (merge: TanStack file routes)
+ *   apps/web/stubs/modules/<m>/**  (the rest)   -> apps/web/src/features/<m>/**
  *
  * The caller must run `composer dump-autoload` afterwards so the classmap drops the moved-away stub
  * paths and PSR-4 picks the classes up from `app/`.
@@ -59,8 +60,10 @@ class ModulePublisher
         $this->moveFile($backendStub."/routes/{$module}.php", $this->backendPath."/routes/modules/{$module}.php");
         $this->files->deleteDirectory($backendStub); // drop the leftover README + emptied dirs
 
-        // Frontend: the stub is location-independent (relative imports), so it drops straight into
-        // features/, where the router's `import.meta.glob('@/features/*/routes.ts')` mounts it.
+        // Frontend: route files merge into src/routes/ (file-based routing — the router plugin picks
+        // them up on the next build and they import their pages from `@/features/<m>/...`). Moved
+        // first, so the rest of the stub (location-independent: relative imports) drops into features/.
+        $this->moveTree($webStub.'/routes', $this->webPath.'/src/routes');
         $this->moveTree($webStub, $this->webPath."/src/features/{$module}");
 
         return true;
