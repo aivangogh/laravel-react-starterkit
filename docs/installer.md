@@ -1,7 +1,7 @@
 # One-Command Installer
 
 > **Status:** built (Phase 9). `scripts/setup.mjs` (`pnpm run setup`) and the
-> `create-laravel-vue-starterkit` scaffolder are implemented; publishing a release tag + the public
+> `create-laravel-react-starterkit` scaffolder are implemented; publishing a release tag + the public
 > npm package is the final step (#33). See [roadmap.md](roadmap.md) (Phase 9).
 >
 > **Note:** the orchestrator is invoked as **`pnpm run setup`**, not `pnpm setup` — the latter is
@@ -12,9 +12,9 @@
 Go from nothing to a running web + API + database stack with a single command:
 
 ```bash
-pnpm create laravel-vue-starterkit my-app
-#   also: npm create laravel-vue-starterkit@latest my-app
-#   also: npx  create-laravel-vue-starterkit my-app
+pnpm create laravel-react-starterkit my-app
+#   also: npm create laravel-react-starterkit@latest my-app
+#   also: npx  create-laravel-react-starterkit my-app
 ```
 
 …which scaffolds the repo, installs **both** ecosystems, brings up the data layer, migrates/seeds,
@@ -34,14 +34,14 @@ chosen.)
 The installer is deliberately split so the heavy lifting is reusable:
 
 ```
-create-laravel-vue-starterkit   (npm package — the "outer wrapper")
+create-laravel-react-starterkit   (npm package — the "outer wrapper")
   └─ fetch template → run ↓
 scripts/setup.mjs               (in-repo orchestrator — "pnpm run setup")
   └─ deps + data layer → hand off to ↓
 php artisan kit:install         (app shaping — moves the preset's module stub into place + seed)
 ```
 
-### Layer 1 — the scaffolder (`create-laravel-vue-starterkit`)
+### Layer 1 — the scaffolder (`create-laravel-react-starterkit`)
 
 A tiny Node `bin` published to npm. Responsibilities **only**:
 
@@ -111,10 +111,10 @@ tag, so `pnpm create` is reproducible. `DEFAULT_REF` and the package version are
 git tag v0.1.0 && git push origin v0.1.0
 
 # 2. Publish the scaffolder (the `create-*` name is what enables `pnpm/npm create`).
-cd packages/create-laravel-vue-starterkit && npm publish --access public
+cd packages/create-laravel-react-starterkit && npm publish --access public
 
 # 3. Smoke-test from the published package in a clean directory.
-cd /tmp && pnpm create laravel-vue-starterkit demo-app --preset=ecommerce
+cd /tmp && pnpm create laravel-react-starterkit demo-app --preset=ecommerce
 ```
 
 For the next release, bump all three in lockstep: the git tag, `DEFAULT_REF`, and the package

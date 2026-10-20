@@ -1,8 +1,8 @@
 # Shared Packages (`packages/*`)
 
 > **Status:** scaffolded (Phase 0). The three internal packages under the `@app/*` scope exist and
-> are installed as pnpm workspace members. The Laravel backend is **not** a member. (shadcn-vue
-> components are added to `@app/ui` later, alongside the `apps/web` app.)
+> are installed as pnpm workspace members. The Laravel backend is **not** a member. (`@app/ui`
+> holds the shadcn/ui components consumed by `apps/web`.)
 
 ## `@app/config`
 
@@ -15,7 +15,7 @@ Exports (from `package.json`):
 | `@app/config/eslint` | `eslint.base.mjs` |
 | `@app/config/prettier` | `prettier.base.json` |
 | `@app/config/tsconfig.base.json` | `tsconfig.base.json` |
-| `@app/config/tsconfig.vue.json` | `tsconfig.vue.json` |
+| `@app/config/tsconfig.react.json` | `tsconfig.react.json` |
 
 Apps and packages extend these instead of defining their own. Project-wide rule changes happen here
 so every workspace inherits them. No build/lint/format steps of its own (no-op scripts).
@@ -62,15 +62,15 @@ export interface User {
 
 ## `@app/ui`
 
-**Path:** `packages/ui` — shared design system: shadcn-vue components plus design tokens.
+**Path:** `packages/ui` — shared design system: shadcn/ui (Base UI) components, the `DataTable`, plus design tokens.
 
 ```
 packages/ui/
-  components.json    shadcn-vue config (style: new-york, base: neutral, icons: lucide)
+  components.json    shadcn config (style: base-nova, base: neutral, icons: lucide)
   src/
-    components/      shadcn primitives + composite components
+    components/      composite components (data-table/: DataTable, DataTableSortHeader)
     components/ui/   raw shadcn-generated components
-    composables/     reusable composition functions
+    hooks/           headless React hooks
     lib/utils.ts     cn() helper, etc.
     styles/globals.css  Tailwind layer / CSS variables
 ```
@@ -96,7 +96,7 @@ pnpm --filter @app/ui ui:add dialog dropdown-menu
 | Alias | Path |
 | --- | --- |
 | `components` | `@app/ui/components` |
-| `composables` | `@app/ui/composables` |
+| `hooks` | `@app/ui/hooks` |
 | `utils` | `@app/ui/lib/utils` |
 | `ui` | `@app/ui/components/ui` |
 | `lib` | `@app/ui/lib` |

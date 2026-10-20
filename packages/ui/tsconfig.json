@@ -1,8 +1,7 @@
 {
-  "extends": "@app/config/tsconfig.vue.json",
+  "extends": "@app/config/tsconfig.react.json",
   "compilerOptions": {
     "noEmit": true,
-    "baseUrl": ".",
     "paths": {
       "@app/ui/*": ["./src/*"]
     }

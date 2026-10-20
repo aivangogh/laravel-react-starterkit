@@ -1,6 +1,6 @@
 ---
 name: dont-repeat-yourself
-description: DRY discipline across the full repo — backend, frontend, types, tests. Use before writing a constant, validation rule, mapping function, model behavior, composable, status string, route literal, or any block of logic that looks familiar. Enforces "extract on the second occurrence" and "one canonical home per fact" across `apps/web`, `packages/`, and `backend/`. Triggers: "add a constant", "validate this input", "map this status", "convert/format/parse", "should I extract this", "same thing in two places".
+description: DRY discipline across the full repo — backend, frontend, types, tests. Use before writing a constant, validation rule, mapping function, model behavior, hook, status string, route literal, or any block of logic that looks familiar. Enforces "extract on the second occurrence" and "one canonical home per fact" across `apps/web`, `packages/`, and `backend/`. Triggers: "add a constant", "validate this input", "map this status", "convert/format/parse", "should I extract this", "same thing in two places".
 ---
 
 # Don't Repeat Yourself
@@ -11,8 +11,8 @@ number meaning "default page size" in three files with three values.
 
 Rule: **one canonical home per fact. Extract on the second occurrence. Reference, don't restate.**
 
-Broad sibling of `ui-reuse-first` (that one is `.vue` markup). This covers everything else: constants,
-enums, types, validation, query scopes, transforms, composables, fixtures.
+Broad sibling of `ui-reuse-first` (that one is JSX markup). This covers everything else: constants,
+enums, types, validation, query scopes, transforms, hooks, fixtures.
 
 ## TL;DR
 
@@ -21,7 +21,7 @@ enums, types, validation, query scopes, transforms, composables, fixtures.
 3. **Extract on the second occurrence.** Once is data, twice is a pattern.
 4. **Cross-stack facts go in `packages/types` (`@app/types`).** Anything FE and BE both reference (DTOs, enums, status strings, permission names) — never restated in either app.
 5. **Backend reuse: traits, Form Requests, Eloquent scopes, API Resources, Policies, Action classes, enums/config.**
-6. **Frontend reuse: composables, utility modules, shared types.**
+6. **Frontend reuse: hooks, utility modules, shared components, shared types.**
 
 ## The pre-write scan
 
@@ -50,10 +50,10 @@ About to write logic / a constant / a type / a rule.
 │   ├── Test arrangement repeated          → factory state / helper / dataset
 │   └── Constant / magic value             → config/<file>.php or App\Enums
 └── Frontend-only?
-    ├── State logic shared by ≥2 components → composable in features/<x>/composables/
-    ├── HTTP call shared by ≥2 callers      → TanStack Query composable (never inline axios)
+    ├── State logic shared by ≥2 components → hook in features/<x>/hooks/ (shared/hooks/ if cross-feature)
+    ├── HTTP call shared by ≥2 callers      → TanStack Query hook (never inline axios)
     ├── Pure transform (format/parse/map)   → utility in features/<x>/lib/ (or shared if cross-feature)
-    ├── Recurring Vue markup                → see ui-reuse-first
+    ├── Recurring JSX markup                → see ui-reuse-first
     └── Constant / magic value              → typed const in a shared module, never inline
 ```
 
@@ -65,9 +65,9 @@ About to write logic / a constant / a type / a rule.
   in 2 places → a scope. Same rules in 2 controllers → a Form Request. Same JSON in 2 endpoints → a
   Resource. Same authorization in 2 controllers → a Policy + permission middleware. Same magic value →
   `config/*` or an enum case.
-- **Frontend → `apps/web/src/`.** Repeated `computed`/watch → a composable. Repeated fetcher → a
-  TanStack Query composable (never raw axios). Repeated transform → a `lib/` utility. Repeated route
-  literal → a named route.
+- **Frontend → `apps/web/src/`.** Repeated stateful logic → a hook. Repeated fetcher → a
+  TanStack Query hook (never raw axios). Repeated transform → a `lib/` utility. Route gating and nav
+  live once in each route's `staticData` (read by the `_app` guard and `useNavItems`) — never restated.
 - **Project-wide config → `packages/config` (`@app/config`).** ESLint/Prettier/tsconfig bases — extend,
   don't per-app override without checking the base first.
 
@@ -98,7 +98,7 @@ Test: can you describe the extracted unit in one sentence without "or"? If no, y
 - [ ] No status/permission/role literal appears more than once; all sites import an enum.
 - [ ] No validation-rule array duplicated across Form Requests.
 - [ ] No Eloquent query body duplicated; shared filters are scopes.
-- [ ] No utility/composable has a near-twin; HTTP goes through Query composables only.
+- [ ] No utility/hook has a near-twin; HTTP goes through Query hooks only.
 - [ ] No magic number/default lives in more than one file.
 - [ ] If I extracted a unit, I migrated every site in the same change.
 

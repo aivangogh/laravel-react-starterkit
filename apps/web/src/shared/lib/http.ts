@@ -3,7 +3,7 @@ import type { ApiError } from '@app/types'
 
 /**
  * The ONE axios instance for the whole app. Never import raw `axios` in a component —
- * import `http` (or, better, wrap the call in a TanStack Query composable).
+ * import `http` (or, better, wrap the call in a TanStack Query hook).
  *
  * Sanctum SPA cookie auth: `withCredentials` sends the session cookie, and axios mirrors the
  * `XSRF-TOKEN` cookie (url-decoded) into the `X-XSRF-TOKEN` header. `withXSRFToken: true` forces
@@ -26,6 +26,11 @@ export const http = axios.create({
 })
 
 let csrfReady = false
+
+/** Forget the primed CSRF cookie (e.g. after a 419), so the next write fetches a fresh one. */
+export function resetCsrfCookie(): void {
+  csrfReady = false
+}
 
 /**
  * Prime the CSRF cookie once before the first mutating request. Sanctum's

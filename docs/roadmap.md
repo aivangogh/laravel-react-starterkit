@@ -7,13 +7,15 @@ What's done, and what remains — in build order.
 - **Layout:** pnpm-workspace monorepo — `apps/web` (SPA) + `packages/{config,types,ui}` (`@app/*`);
   `backend/` (Laravel) **outside** the workspace.
 - **Package manager:** pnpm. **Web app package:** `web`. **Shared scope:** `@app/*`.
-- **Frontend:** Vue 3 + TypeScript; Vite; Pinia (client state) + **TanStack Query** (server state);
-  Axios; Vue Router; Tailwind 4; **shadcn-vue** via `@app/ui`; lucide; oxlint→eslint; Vitest+Playwright.
+- **Frontend:** React 19 + TypeScript; Vite; **TanStack Router** (file-based) + **TanStack Query** (all
+  server state, incl. the session user); Axios; Valibot; Tailwind 4; **shadcn/ui on Base UI** via
+  `@app/ui`; lucide-react; ESLint; Vitest + React Testing Library + Playwright. (Originally built in
+  Vue 3 — see Phase 10.)
 - **Backend:** Laravel 13 on PHP 8.4; Sanctum + Fortify; Spatie permission/activitylog/medialibrary/settings.
 - **Auth:** Fortify (headless) + Sanctum SPA cookie sessions.
 - **Data (target):** Docker **Postgres 17 + Redis 7**, `.env`-driven.
 - **Module selection:** interactive `php artisan kit:install` (stub-publishing) — see [modules.md](modules.md).
-- **One-command install:** `pnpm create laravel-vue-starterkit` (Node scaffolder) over a shared
+- **One-command install:** `pnpm create laravel-react-starterkit` (Node scaffolder) over a shared
   `pnpm setup` orchestrator — see [installer.md](installer.md). Ships last (Phase 9).
 
 ## ✅ Done
@@ -40,9 +42,8 @@ What's done, and what remains — in build order.
 - [x] `packages/config` (`@app/config`) — eslint 10 / prettier 3.9 / tsconfig bases.
 - [x] `packages/types` (`@app/types`) — `Uuid`, `IsoDateTime`, `Paginated<T>`, `ApiError`, `User`,
       `Role`, `Permission`.
-- [x] `packages/ui` (`@app/ui`) — shadcn-vue config (`components.json`, `lib/utils.ts` `cn()`,
-      `styles/globals.css` neutral theme). *Note: `lucide-vue-next` to be pinned to a maintained
-      version, and `vue-demi` build script approved, when `apps/web` lands in Phase 5.*
+- [x] `packages/ui` (`@app/ui`) — shadcn config (`components.json`, `lib/utils.ts` `cn()`,
+      `styles/globals.css` neutral theme).
 
 ### Phase 1 — Local stack + backend wiring ✅ done
 - [x] `docker-compose.yml` + `docker/postgres/init/01-extensions.sql` + `docker/redis/redis.conf`;
@@ -74,18 +75,19 @@ What's done, and what remains — in build order.
       `customer` role + `products/categories/orders` permissions.
 
 ### Phase 5 — `apps/web` scaffold
-- [ ] `apps/web` (Vite vue-ts) + Vue Router, Pinia, `@tanstack/vue-query`, Axios, Tailwind 4.
-- [ ] `src/app/` (main.ts, App.vue, router), `src/shared/lib/` (`http.ts`, `query-client.ts`,
-      `query-keys.ts`), `src/shared/composables/usePermissions.ts`, `src/shared/directives/can.ts`.
-- [ ] `features/auth/` (login/register/forgot/reset, `useAuth`, Pinia `auth` store, Sanctum cookie flow).
+- [ ] `apps/web` (Vite + React) + TanStack Router, TanStack Query, Axios, Tailwind 4.
+- [ ] `src/main.tsx`, `src/router.tsx`, `src/routes/` (`_app` guard, `_guest`), `src/shared/lib/`
+      (`http.ts`, `query-client.ts`, `query-keys.ts`), `src/shared/hooks/usePermissions.ts`,
+      `src/shared/components/Can.tsx`.
+- [ ] `features/auth/` (login/register/forgot/reset, `useAuth` hooks, session user query, Sanctum cookie flow).
 
 ### Phase 6 — Base feature pages
 - [ ] `features/`: `users`, `roles`, `permissions`, `activity-log`, `profile`, `settings`, `api-tokens`
-      — pages + Query composables; permission-gated nav + routes.
+      — pages + Query hooks; permission-gated nav + routes.
 
 ### Phase 7 — E-commerce frontend module (stub)
 - [ ] `apps/web/stubs/modules/ecommerce/`: `products`, `categories`, `orders`, `cart` feature
-      (pages/composables/stores); gated by the installer flag.
+      (route files + pages/hooks/components); gated by the installer flag.
 
 ### Phase 8 — Verification
 Scope: verify the **Basic** preset end to end against the live stack, and keep both presets green
@@ -107,9 +109,9 @@ test-suite level (`composer test` + `pnpm test:unit` exercise the in-place modul
 > 1. **SPA could not reach the API** — no `VITE_API_URL` default (and `.env.example` had the wrong
 >    port), so a fresh `pnpm dev` hit the Vite origin. Fixed with a `http://localhost:8000` default
 >    in the axios client + an aligned `.env.example`.
-> 2. **`v-can` hid every gated control from the super-admin** — the directive lacked the super-admin
->    bypass that `usePermissions().can()` has. Fixed by routing both through one canonical
->    `authStore.can()`.
+> 2. **The permission directive hid every gated control from the super-admin** — it lacked the
+>    super-admin bypass that `usePermissions().can()` has. Fixed by routing both through one
+>    canonical `can()` (today `src/shared/lib/permissions.ts`, used by `usePermissions` and `<Can>`).
 > 3. **All modals rendered off-screen** — Tailwind v4 was not scanning `packages/ui`, so utilities
 >    used only inside `@app/ui` (the dialog's `fixed top-[50%] translate-*` centering) were never
 >    generated. Fixed with a `@source` in the shared `globals.css`.
@@ -121,7 +123,7 @@ test-suite level (`composer test` + `pnpm test:unit` exercise the in-place modul
 > Ships **last** — the scaffolder clones the finished, verified template, so it depends on Phases 0–8.
 - [x] **`kit:install` stub-publishing** — `App\Installer\ModulePublisher` **moves** the backend stub
       (`app`/`database`/`routes/modules/ecommerce.php`) and the frontend stub
-      (`apps/web/src/features/ecommerce/`) into place for the E-commerce preset (moving, not copying,
+      (`routes/_app/**` → `apps/web/src/routes/_app/`, the rest → `apps/web/src/features/ecommerce/`) into place for the E-commerce preset (moving, not copying,
       avoids duplicate-class + double-migration; see [modules.md](modules.md)). A fresh publish
       re-dumps Composer and migrates + seeds in a subprocess. Verified live end to end.
 - [x] `scripts/setup.mjs` + root `pnpm run setup` — idempotent orchestrator: preflight (Node/pnpm/
@@ -129,12 +131,22 @@ test-suite level (`composer test` + `pnpm test:unit` exercise the in-place modul
       `.env`/`composer install`/`key:generate`, data layer (Docker → SQLite fallback), `pnpm install`,
       hand off to `kit:install`, print next steps. *(`pnpm run setup`, not `pnpm setup` — the latter is
       a pnpm built-in.)*
-- [x] `create-laravel-vue-starterkit` npm package — thin, dependency-free Node `bin`:
+- [x] `create-laravel-react-starterkit` npm package — thin, dependency-free Node `bin`:
       `git clone --depth 1` the template at a ref → drop `.git` → prompt name/preset →
       `pnpm run setup`. Verified via a full local scaffold (E-commerce, SQLite).
 - [ ] **Release (yours):** tag a template release, pin the scaffolder's `DEFAULT_REF` to it,
-      `npm publish` `create-laravel-vue-starterkit`, and smoke-test `pnpm create laravel-vue-starterkit`
+      `npm publish` `create-laravel-react-starterkit`, and smoke-test `pnpm create laravel-react-starterkit`
       in a clean dir. See [installer.md](installer.md) → Release mechanics.
+
+### Phase 10 — React migration
+- [ ] Port `apps/web` from Vue 3 to React 19: TanStack Router file routes (`src/routes/`, single
+      `_app` guard reading `staticData.{permission,module}`, nav from `staticData.nav`), TanStack Query
+      for all server state (Pinia removed; session user under `authKeys.user()`), Valibot search
+      params, `<Can>` in place of `v-can`, `FormField` + `formErrors()` for forms.
+- [ ] `packages/ui` → shadcn/ui on Base UI (`base-nova`) + `@tanstack/react-table` `DataTable`;
+      `@app/config` → `tsconfig.react.json` + react-hooks/react-refresh ESLint.
+- [ ] E-commerce web stub ported (`stubs/modules/ecommerce/routes/_app/**` + feature folders);
+      installer scaffolder renamed to `create-laravel-react-starterkit`.
 
 ## Notes / gotchas discovered
 

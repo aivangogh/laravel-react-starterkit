@@ -1,6 +1,6 @@
 ---
 name: ui-reuse-first
-description: Reuse-first UI/UX discipline for the Vue 3 SPA. Use before writing any `.vue` markup, designing new UI surfaces, or reviewing changes that add inline markup. Enforces "look for an existing component first; extract one if you're about to write the same thing twice." Triggers on "add a card", "build a header", "render a status", "show a banner", "make a list view", "design the page", or any new screen/dialog/form.
+description: Reuse-first UI/UX discipline for the React 19 SPA. Use before writing any JSX markup, designing new UI surfaces, or reviewing changes that add inline markup. Enforces "look for an existing component first; extract one if you're about to write the same thing twice." Triggers on "add a card", "build a header", "render a status", "show a banner", "make a list view", "design the page", or any new screen/dialog/form.
 ---
 
 # Reuse-first UI/UX
@@ -20,13 +20,13 @@ and look*. Scope: `@app/ui` = `packages/ui`.
 2. **Compose, don't copy.** If a primitive exists in `packages/ui/src/components/ui/` (shadcn) or a composite in `packages/ui/src/components/`, use it.
 3. **Extract on the second occurrence.** The second callsite is the cheapest moment to find the right abstraction.
 4. **One canonical implementation per concept** — a status pill, a page header, a card each have exactly one home.
-5. **Pure presentation → `packages/ui`. Touches composables/router → `apps/web/src/features/<x>/components/`.**
+5. **Pure presentation → `packages/ui`. Touches app hooks/router → `apps/web/src/features/<x>/components/`.**
 
 ## When it fires
 
-About to write a new `.vue` file; add familiar-looking markup; add a status indicator/header/banner/card/dialog/list/table row; design a screen; or hear "add a / build a / render a / show a / design the …". Err toward firing.
+About to write a new `.tsx` component; add familiar-looking markup; add a status indicator/header/banner/card/dialog/list/table row; design a screen; or hear "add a / build a / render a / show a / design the …". Err toward firing.
 
-Skip for: pure logic edits (composables/stores), editing existing templates without new surfaces, throwaway prototypes.
+Skip for: pure logic edits (hooks), editing existing JSX without new surfaces, throwaway prototypes.
 
 ## The pre-write scan (every time)
 
@@ -43,14 +43,14 @@ If something matches → use it. If it's *close* → extend it (add an optional 
 ```
 Need to render a UI surface.
 ├── Does a shadcn primitive cover it? (ls packages/ui/src/components/ui)
-│   ├── Yes → use it. Missing → `pnpm dlx shadcn-vue@latest add <name>`.
+│   ├── Yes → use it. Missing → `pnpm --filter @app/ui ui:add <name>`.
 │   └── No → ↓
 ├── Does a composite ship in packages/ui/src/components?
 │   ├── Yes → use it.   Close → extend with an optional prop.
 │   └── No → ↓
 ├── Will another page render the same surface?
-│   ├── Yes, pure (no router/composables/@/... imports) → packages/ui/src/components/<Name>.vue
-│   ├── Yes, needs composables/router → apps/web/src/features/<feature>/components/<Name>.vue
+│   ├── Yes, pure (no router/app hooks/@/... imports) → packages/ui/src/components/<name>.tsx
+│   ├── Yes, needs app hooks/router → apps/web/src/features/<feature>/components/<Name>.tsx
 │   └── Nothing else uses it → inline in the page is fine (flag `// TODO: extract if this recurs`)
 ```
 
@@ -65,12 +65,12 @@ The cost of waiting shows up later as a multi-PR audit to consolidate five hand-
 ## Reuse-friendly component conventions
 
 Pure components in `packages/ui/src/components/`:
-- One responsibility. Props in, events out — never reach into API/router/Pinia.
-- Accept `class?: HTMLAttributes['class']`, merge with `cn()`.
+- One responsibility. Props in, callbacks out — never reach into API/router/query cache.
+- Accept `className?: string`, merge with `cn()`.
 - `data-slot="<component-name>"` on the root so specs target it without coupling to class strings.
-- No `@/...` imports (only `@app/types`, `@app/ui/...`, `vue`, third-party). Need a composable? It belongs in `apps/web`.
+- No `@/...` imports (only `@app/types`, `@app/ui/...`, `react`, third-party). Need an app hook? It belongs in `apps/web`.
 
-Feature-local components (`apps/web/src/features/<x>/components/`): may use `vue-router` and the feature's composables; same prop/event/class/slot discipline; promote to `@app/ui` the moment a second feature needs it.
+Feature-local components (`apps/web/src/features/<x>/components/`): may use `@tanstack/react-router` and the feature's hooks; same prop/callback/className/data-slot discipline; promote to `@app/ui` the moment a second feature needs it.
 
 ## Naming
 
@@ -79,17 +79,17 @@ The name is the API. Concrete + singular. Good: `UserStatusPill`, `ProductCard`,
 ## Anti-patterns (refuse to write)
 
 - A second hand-rolled status pill / header / banner / card in any page. Use/extend the shared one.
-- A `<span class="bg-amber-100 …">` rendering a status — that's a `StatusPill` component.
+- A `<span className="bg-amber-100 …">` rendering a status — that's a `StatusPill` component.
 - Copy-pasting markup into a new page "just to get it working".
-- A shadcn primitive copied into `apps/web/src/components/ui/` (CLI writes to `packages/ui`, always).
+- A shadcn primitive copied into `apps/web` (CLI writes to `packages/ui`, always).
 
 ## Pre-PR checklist
 
 - [ ] Scanned `packages/ui/src/components/` and the feature's `components/` before writing.
 - [ ] Every recurring surface renders through a shared component, not inline markup.
-- [ ] New component has: props for what differs, defaults for what doesn't, `class?`, `data-slot`.
+- [ ] New component has: props for what differs, defaults for what doesn't, `className?`, `data-slot`.
 - [ ] If extracted, every existing callsite migrated in the same change.
-- [ ] Lives in `packages/ui` if pure, `apps/web/src/features/<x>/components/` if it touches composables/router.
+- [ ] Lives in `packages/ui` if pure, `apps/web/src/features/<x>/components/` if it touches app hooks/router.
 - [ ] Name is concrete and singular.
 
 ## After-write
@@ -101,4 +101,4 @@ pnpm --filter web lint
 
 ## Related skills
 
-`frontend-architecture`, `new-vue-page` (if present), `add-shared-type`, `commit-conventions`.
+`frontend-architecture`, `add-shared-type`, `commit-conventions`.

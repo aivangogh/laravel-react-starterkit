@@ -1,5 +1,5 @@
 /**
- * Centralised, typed TanStack Query key factories. Never inline query-key strings in composables —
+ * Centralised, typed TanStack Query key factories. Never inline query-key strings in hooks —
  * import a factory from here so keys stay consistent and invalidation is precise.
  */
 

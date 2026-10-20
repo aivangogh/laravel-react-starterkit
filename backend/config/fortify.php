@@ -129,7 +129,7 @@ return [
     | you may not need them when building your own application. This may be
     | especially true if you're writing a custom single-page application.
     |
-    | This is a headless API for a decoupled Vue SPA, so view routes are off;
+    | This is a headless API for a decoupled React SPA, so view routes are off;
     | Fortify returns JSON responses to requests sending `Accept: application/json`.
     |
     */

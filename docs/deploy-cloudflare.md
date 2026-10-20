@@ -103,7 +103,7 @@ ship. Deploy ecommerce from a scaffolded copy instead:
 
 ```sh
 # 1. Scaffold a fresh app and shape it
-pnpm create laravel-vue-starterkit my-shop
+pnpm create laravel-react-starterkit my-shop
 cd my-shop
 pnpm run setup                 # choose preset: E-commerce (runs kit:install,
                                # migrate + seed; needs PHP 8.4 + local DB)

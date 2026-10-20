@@ -1,58 +1,52 @@
-import type { Component } from 'vue'
-import type { RouteRecordRaw } from 'vue-router'
+import type { ComponentType, SVGProps } from 'react'
 
 /**
- * Route-module aggregation contract.
+ * Route metadata contract.
  *
- * Every feature declares its routes in `apps/web/src/features/<feature>/routes.ts` as a
- * `default` export of type `AppRouteRecord[]`. The router (`app/router/index.ts`) collects them
- * with `import.meta.glob('@/features/*&#47;routes.ts', { eager: true })`, flattens each module's
- * `default`, and registers them as CHILDREN of the authenticated `DashboardLayout` shell.
- *
- * Nav entries are derived from routes whose `meta.nav` is set (see {@link AppNavMeta}); the
- * per-item `meta.permission` decides visibility via {@link usePermissions}.
+ * Every page is a file route under `src/routes/`. Authenticated pages live under `src/routes/_app/`
+ * (the `DashboardLayout` shell), public auth pages under `src/routes/_guest/`. A route declares its
+ * intent through `staticData` — never through its own `beforeLoad`: the single guard in
+ * `routes/_app.tsx` reads `permission`/`module` from every matched route, and the sidebar is derived
+ * from routes that set `nav` (see `useNavItems`).
  */
 
-/** Sidebar/nav presentation for a route. Presence of `meta.nav` is what makes a route nav-able. */
+/** Sidebar/nav presentation for a route. Presence of `staticData.nav` is what makes a route nav-able. */
 export interface AppNavMeta {
   /** Label rendered next to the icon. */
   title: string
-  /** Icon component — import the lucide-vue-next icon directly in the feature's `routes.ts`. */
-  icon?: Component
+  /** Icon component — import the lucide-react icon directly in the route file. */
+  icon?: ComponentType<SVGProps<SVGSVGElement>>
   /** Ascending sort weight among nav items (default 0). */
   order?: number
 }
 
-/** Typed `meta` for every app route. Merged into vue-router's `RouteMeta` (see below). */
-export interface AppRouteMeta {
-  /** Route requires an authenticated user; unauthenticated visitors are sent to `login`. */
-  requiresAuth?: boolean
-  /** Route is for unauthenticated visitors only (login/register); authed users go `home`. */
-  guestOnly?: boolean
-  /** Permission the user must hold; missing it redirects to `forbidden`. Gates the nav item too. */
+/** Typed `staticData` for every app route (merged into TanStack Router below). */
+export interface AppRouteStaticData {
+  /** Permission the user must hold; missing it redirects to `/forbidden`. Gates the nav item too. */
   permission?: string
   /**
-   * The optional install module this route belongs to (e.g. `'ecommerce'`). When set, the route +
-   * its nav item are additionally gated by the runtime install flag: hidden in the nav and
-   * redirected to `home` by the guard unless the module is enabled (see
-   * {@link useAppConfig}'s `isModuleEnabled`). The PRIMARY gate is still file-presence — the stub
-   * is only copied into `src/features/` for the matching preset — so a Basic build ships no
-   * module code at all; this flag is a second layer for a mounted-but-disabled module.
+   * The optional install module this route belongs to (e.g. `'ecommerce'`). When set, the route + its
+   * nav item are additionally gated by the runtime install flag from `/api/config`: hidden in the nav
+   * and redirected home by the guard unless the module is enabled. The PRIMARY gate is still
+   * file-presence — a module's route files only exist in `src/routes/` once `kit:install` publishes
+   * them — so this flag is a second layer for a mounted-but-disabled module.
    */
   module?: string
   /** Set to surface this route in the app sidebar/nav. */
   nav?: AppNavMeta
 }
 
-/** A `RouteRecordRaw` whose `meta` is the typed {@link AppRouteMeta}. Feature `routes.ts` files use this. */
-export type AppRouteRecord = RouteRecordRaw & { meta?: AppRouteMeta }
+declare module '@tanstack/react-router' {
+  // eslint-disable-next-line @typescript-eslint/no-empty-object-type
+  interface StaticDataRouteOption extends AppRouteStaticData {}
+}
 
 /** A permission-resolved nav entry consumed by the nav components. */
 export interface NavItem {
-  /** Named route to link to (`<router-link :to="{ name }">`). */
-  name: string
+  /** Full path to link to (`<Link to={item.to}>`). */
+  to: string
   title: string
-  icon?: Component
+  icon?: AppNavMeta['icon']
   order: number
   /** Permission gating visibility; `undefined` means always visible. */
   permission?: string

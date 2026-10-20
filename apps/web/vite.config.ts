@@ -1,7 +1,8 @@
 import fs from 'node:fs'
 import { fileURLToPath, URL } from 'node:url'
 import { defineConfig } from 'vite'
-import vue from '@vitejs/plugin-vue'
+import react from '@vitejs/plugin-react'
+import { tanstackRouter } from '@tanstack/router-plugin/vite'
 import tailwindcss from '@tailwindcss/vite'
 
 // Read a `KEY=value` from a dotenv-style file, relative to this config. Best-effort: returns undefined
@@ -33,9 +34,16 @@ function resolveApiUrl(): string {
 const apiUrl = resolveApiUrl()
 
 // Aliases mirror `tsconfig.json` `paths`. `@app/ui` and `@app/types` resolve to
-// package SOURCE so Vite transpiles them (shadcn-vue components are consumed as source).
+// package SOURCE so Vite transpiles them (shadcn/ui components are consumed as source).
 export default defineConfig({
-  plugins: [vue(), tailwindcss()],
+  // The router plugin must run before react(): it generates `src/routeTree.gen.ts` from `src/routes/`
+  // and code-splits each route's component automatically.
+  plugins: [
+    // `__tests__` folders under src/routes/ hold specs, not routes.
+    tanstackRouter({ target: 'react', autoCodeSplitting: true, routeFileIgnorePattern: '__tests__' }),
+    react(),
+    tailwindcss(),
+  ],
   define: {
     // Feed the resolved API origin to http.ts's `import.meta.env.VITE_API_URL`, so it works even when
     // VITE_API_URL isn't set in apps/web/.env (derived from backend/.env instead).

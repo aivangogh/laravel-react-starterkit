@@ -21,7 +21,7 @@ export function uniqueEmail(prefix = 'e2e'): string {
 }
 
 /**
- * The visible desktop sidebar. The shadcn-vue `Sidebar` tags its root with `data-slot="sidebar"`;
+ * The visible desktop sidebar. The shadcn `Sidebar` tags its root with `data-slot="sidebar"`;
  * at md+ only the desktop variant renders (the mobile drawer is a Sheet that stays closed).
  */
 export function sidebar(page: Page): Locator {

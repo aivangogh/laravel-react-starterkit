@@ -41,11 +41,10 @@ To make it permanent, move that directory **ahead** of the 8.2 directory in your
 
 ## 1. Install JS workspace deps  *[works now]*
 
-The workspace (`pnpm-workspace.yaml` + `packages/{config,types,ui}`) is scaffolded; `apps/web` arrives
-in Phase 5.
+The workspace is `apps/web` (the React SPA) + `packages/{config,types,ui}`.
 
 ```bash
-pnpm install        # installs all of packages/* (and apps/* once it exists)
+pnpm install        # installs apps/* and packages/*
 ```
 
 The Laravel backend is a sibling, not a workspace member — it has its own toolchain (step 3).
@@ -91,9 +90,9 @@ Common workspace scripts (planned root `package.json`):
 
 ```bash
 pnpm build        # build apps + packages
-pnpm lint         # oxlint + eslint
+pnpm lint         # eslint
 pnpm format       # prettier
-pnpm type-check   # vue-tsc / tsc
+pnpm type-check   # tsc
 pnpm test:unit    # vitest
 pnpm test:e2e     # playwright
 ```

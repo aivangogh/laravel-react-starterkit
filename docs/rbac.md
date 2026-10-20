@@ -76,7 +76,7 @@ return [
 ];
 ```
 
-The SPA then gates UI with a `can()` helper / `v-can` directive — see the permission-aware UI
+The SPA then gates UI with `usePermissions().can()` / the `<Can permission>` component — see the permission-aware UI
 section in [frontend.md](frontend.md).
 
 ## Reference

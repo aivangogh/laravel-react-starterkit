@@ -1,8 +1,6 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { defineComponent, h } from 'vue'
-import { flushPromises, mount } from '@vue/test-utils'
-import { QueryClient, VueQueryPlugin } from '@tanstack/vue-query'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Paginated, Permission, Role } from '@app/types'
+import { renderHookWithQuery } from '@/test/utils'
 import {
   isSystemRole,
   useCreateRole,
@@ -10,7 +8,7 @@ import {
   usePermissionCatalogue,
   useRolesTable,
   useUpdateRole,
-} from '@/features/roles/composables/useRoles'
+} from '@/features/roles/hooks/useRoles'
 
 // Hoisted http mock so `vi.mock`'s factory can reference it. `ensureCsrfCookie` is stubbed too so
 // the write mutations don't hit the real Sanctum priming call.
@@ -35,89 +33,62 @@ const rolesPage: Paginated<Role> = {
   meta: { current_page: 1, last_page: 3, per_page: 10, total: 24 },
 }
 
-const permissionsPage: Paginated<Permission> = {
-  data: [
-    { id: 'p1' as Permission['id'], name: 'roles.view' },
-    { id: 'p2' as Permission['id'], name: 'roles.update' },
-    { id: 'p3' as Permission['id'], name: 'users.view' },
-  ],
-  meta: { current_page: 1, last_page: 1, per_page: 100, total: 3 },
-}
+// The real endpoint shape: unpaginated, unwrapped → a bare array.
+const permissions: Permission[] = [
+  { id: 'p1' as Permission['id'], name: 'roles.view' },
+  { id: 'p2' as Permission['id'], name: 'roles.update' },
+  { id: 'p3' as Permission['id'], name: 'users.view' },
+]
 
-/** Run a composable inside a real setup + QueryClient, exposing the client to spy on invalidation. */
-function withSetup<T>(composable: () => T) {
-  const client = new QueryClient({
-    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
-  })
-  const invalidateSpy = vi.spyOn(client, 'invalidateQueries')
-  let result!: T
-
-  const wrapper = mount(
-    defineComponent({
-      setup() {
-        result = composable()
-        return () => h('div')
-      },
-    }),
-    { global: { plugins: [[VueQueryPlugin, { queryClient: client }]] } },
-  )
-
-  return { wrapper, result: () => result, invalidateSpy }
-}
-
-describe('useRoles composables', () => {
+describe('useRoles hooks', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mocks.ensureCsrf.mockResolvedValue(undefined)
   })
 
-  afterEach(() => {
-    vi.restoreAllMocks()
-  })
-
   it('useRolesTable requests the roles list with the standard table params', async () => {
     mocks.get.mockResolvedValue({ data: rolesPage })
 
-    const { result } = withSetup(() => useRolesTable())
-    await flushPromises()
+    const { result } = renderHookWithQuery(() => useRolesTable())
 
+    await vi.waitFor(() => expect(result.current.data).toEqual(rolesPage.data))
     expect(mocks.get).toHaveBeenCalledWith('/api/roles', {
       params: { page: 1, per_page: 10 },
     })
-    expect(result().data.value).toEqual(rolesPage.data)
-    expect(result().rowCount.value).toBe(24)
+    expect(result.current.tableProps.rowCount).toBe(24)
   })
 
   it('usePermissionCatalogue fetches the full permission list and maps to the array', async () => {
-    mocks.get.mockResolvedValue({ data: permissionsPage })
+    mocks.get.mockResolvedValue({ data: permissions })
 
-    const { result } = withSetup(() => usePermissionCatalogue())
-    await flushPromises()
+    const { result } = renderHookWithQuery(() => usePermissionCatalogue())
 
-    expect(mocks.get).toHaveBeenCalledWith('/api/permissions', { params: { per_page: 100 } })
-    expect(result().data.value).toEqual(permissionsPage.data)
+    await vi.waitFor(() => expect(result.current.data).toEqual(permissions))
+    expect(mocks.get).toHaveBeenCalledWith('/api/permissions')
   })
 
   it('useCreateRole POSTs the payload and invalidates the roles caches', async () => {
     mocks.post.mockResolvedValue({ data: rolesPage.data[1] })
+    const { result, queryClient } = renderHookWithQuery(() => useCreateRole())
+    const invalidate = vi.spyOn(queryClient, 'invalidateQueries')
 
-    const { result, invalidateSpy } = withSetup(() => useCreateRole())
-    await result().mutateAsync({ name: 'editor', permissions: ['roles.view'] })
+    await result.current.mutateAsync({ name: 'editor', permissions: ['roles.view'] })
 
     expect(mocks.ensureCsrf).toHaveBeenCalledOnce()
     expect(mocks.post).toHaveBeenCalledWith('/api/roles', {
       name: 'editor',
       permissions: ['roles.view'],
     })
-    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['table', 'roles', {}] })
-    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['roles'] })
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: ['table', 'roles', {}] })
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: ['roles'] })
   })
 
   it('useUpdateRole PUTs to the role id with the payload', async () => {
     mocks.put.mockResolvedValue({ data: rolesPage.data[0] })
+    const { result, queryClient } = renderHookWithQuery(() => useUpdateRole())
+    const invalidate = vi.spyOn(queryClient, 'invalidateQueries')
 
-    const { result, invalidateSpy } = withSetup(() => useUpdateRole())
-    await result().mutateAsync({
+    await result.current.mutateAsync({
       id: '1',
       payload: { name: 'admin', permissions: ['roles.view', 'roles.update'] },
     })
@@ -127,18 +98,19 @@ describe('useRoles composables', () => {
       name: 'admin',
       permissions: ['roles.view', 'roles.update'],
     })
-    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['table', 'roles', {}] })
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: ['table', 'roles', {}] })
   })
 
   it('useDeleteRole DELETEs the role id and invalidates', async () => {
     mocks.delete.mockResolvedValue({ data: null })
+    const { result, queryClient } = renderHookWithQuery(() => useDeleteRole())
+    const invalidate = vi.spyOn(queryClient, 'invalidateQueries')
 
-    const { result, invalidateSpy } = withSetup(() => useDeleteRole())
-    await result().mutateAsync('2')
+    await result.current.mutateAsync('2')
 
     expect(mocks.ensureCsrf).toHaveBeenCalledOnce()
     expect(mocks.delete).toHaveBeenCalledWith('/api/roles/2')
-    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['roles'] })
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: ['roles'] })
   })
 
   it('isSystemRole flags seeded roles case-insensitively', () => {

@@ -1,15 +1,13 @@
-import { defineComponent, h } from 'vue'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { mount } from '@vue/test-utils'
-import { QueryClient, VueQueryPlugin } from '@tanstack/vue-query'
+import { renderHookWithQuery } from '@/test/utils'
 import {
   useCategoryOptions,
   useCreateProduct,
   useDeleteProduct,
   useProductsTable,
   useUpdateProduct,
-} from '../composables/useProducts'
-import { formatMinorToMajor, majorToMinor, minorToMajorNumber } from '../lib/money'
+} from '../hooks/useProducts'
+import { formatMoney, majorToMinor, minorToMajorNumber } from '../../lib/money'
 import type { Product } from '../../types'
 
 // Hoisted mock handles so they exist when `vi.mock`'s factory runs.
@@ -49,24 +47,6 @@ const createPayload = {
   is_active: true,
 }
 
-/** Run a composable inside a mounted component so `useQuery`/`useMutation`/`useQueryClient` work. */
-function withSetup<T>(composable: () => T) {
-  const queryClient = new QueryClient({
-    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
-  })
-  let result!: T
-  const wrapper = mount(
-    defineComponent({
-      setup() {
-        result = composable()
-        return () => h('div')
-      },
-    }),
-    { global: { plugins: [[VueQueryPlugin, { queryClient }]] } },
-  )
-  return { result, wrapper, queryClient }
-}
-
 describe('useProducts', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -78,7 +58,7 @@ describe('useProducts', () => {
       data: { data: [], meta: { current_page: 1, last_page: 1, per_page: 10, total: 0 } },
     })
 
-    withSetup(() => useProductsTable())
+    renderHookWithQuery(() => useProductsTable())
 
     await vi.waitFor(() => expect(mocks.get).toHaveBeenCalled())
     expect(mocks.get).toHaveBeenCalledWith(
@@ -94,7 +74,7 @@ describe('useProducts', () => {
       data: { data: [], meta: { current_page: 1, last_page: 1, per_page: 100, total: 0 } },
     })
 
-    withSetup(() => useCategoryOptions(true))
+    renderHookWithQuery(() => useCategoryOptions(true))
 
     await vi.waitFor(() => expect(mocks.get).toHaveBeenCalled())
     expect(mocks.get).toHaveBeenCalledWith(
@@ -105,10 +85,10 @@ describe('useProducts', () => {
 
   it('creates a product via POST /api/products, primes CSRF, and invalidates the list', async () => {
     mocks.post.mockResolvedValue({ data: fakeProduct })
-    const { result, queryClient } = withSetup(() => useCreateProduct())
+    const { result, queryClient } = renderHookWithQuery(() => useCreateProduct())
     const invalidate = vi.spyOn(queryClient, 'invalidateQueries')
 
-    await result.mutateAsync(createPayload)
+    await result.current.mutateAsync(createPayload)
 
     expect(mocks.ensureCsrfCookie).toHaveBeenCalledTimes(1)
     expect(mocks.post).toHaveBeenCalledWith('/api/products', createPayload)
@@ -119,19 +99,19 @@ describe('useProducts', () => {
 
   it('updates a product via PUT /api/products/{id} with the minor-unit price', async () => {
     mocks.put.mockResolvedValue({ data: fakeProduct })
-    const { result } = withSetup(() => useUpdateProduct())
+    const { result } = renderHookWithQuery(() => useUpdateProduct())
 
-    await result.mutateAsync({ id: 'p1', ...createPayload })
+    await result.current.mutateAsync({ id: 'p1', ...createPayload })
 
     expect(mocks.put).toHaveBeenCalledWith('/api/products/p1', createPayload)
   })
 
   it('deletes a product via DELETE /api/products/{id} and invalidates the list', async () => {
     mocks.delete.mockResolvedValue({ data: null })
-    const { result, queryClient } = withSetup(() => useDeleteProduct())
+    const { result, queryClient } = renderHookWithQuery(() => useDeleteProduct())
     const invalidate = vi.spyOn(queryClient, 'invalidateQueries')
 
-    await result.mutateAsync('p1')
+    await result.current.mutateAsync('p1')
 
     expect(mocks.ensureCsrfCookie).toHaveBeenCalledTimes(1)
     expect(mocks.delete).toHaveBeenCalledWith('/api/products/p1')
@@ -141,8 +121,8 @@ describe('useProducts', () => {
 
 describe('money helpers', () => {
   it('formats integer minor units as a major-unit currency string', () => {
-    expect(formatMinorToMajor(1299)).toContain('12.99')
-    expect(formatMinorToMajor(0)).toContain('0.00')
+    expect(formatMoney(1299)).toContain('12.99')
+    expect(formatMoney(0)).toContain('0.00')
   })
 
   it('round-trips major units to minor units and back', () => {

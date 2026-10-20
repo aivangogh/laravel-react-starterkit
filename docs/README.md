@@ -1,6 +1,6 @@
 # Documentation
 
-Documentation for the Laravel + Vue decoupled starter kit. The architecture is a pnpm-workspace
+Documentation for the Laravel + React decoupled starter kit. The architecture is a pnpm-workspace
 monorepo with `apps/web` + `packages/*`, and a Laravel backend kept outside the workspace.
 
 ## Current status
@@ -12,8 +12,8 @@ monorepo with `apps/web` + `packages/*`, and a Laravel backend kept outside the 
 - ✅ **Local stack + backend wiring (Phase 1)** — Docker **Postgres 17 + Redis 7** (`predis`),
   `User` traits, headless Fortify, Sanctum SPA cookie auth + CORS, Spatie middleware aliases.
   **Verified end-to-end** (CSRF → register → authenticated `/api/user`).
-- ⏳ **Planned, not yet built** — the `apps/web` SPA, the API controllers, the `kit:install`
-  installer, and the e-commerce module. See [roadmap.md](roadmap.md).
+- ✅ **`apps/web` SPA, base API, `kit:install` presets and the e-commerce module** are built; the SPA
+  is being ported from Vue 3 to React 19 (Phase 10). See [roadmap.md](roadmap.md).
 
 ## Index
 
@@ -21,7 +21,7 @@ monorepo with `apps/web` + `packages/*`, and a Laravel backend kept outside the 
 |---|---|
 | [getting-started.md](getting-started.md) | Zero-to-running: prerequisites, pnpm install, Docker DB, backend setup, run the web app |
 | [architecture.md](architecture.md) | Bird's-eye view: monorepo shape, component responsibilities, workspace boundaries |
-| [frontend.md](frontend.md) | `apps/web` — stack, feature-based layout, path aliases, state (Pinia + TanStack Query), routing, testing |
+| [frontend.md](frontend.md) | `apps/web` — stack, feature-based layout, path aliases, state (TanStack Query), file-based routing, testing |
 | [backend.md](backend.md) | `backend/` — Laravel 13 API, installed packages, auth model, conventions |
 | [packages.md](packages.md) | `packages/*` — `@app/config`, `@app/types`, `@app/ui` |
 | [local-stack.md](local-stack.md) | Docker Postgres 17 + Redis 7 dev stack |
@@ -29,7 +29,7 @@ monorepo with `apps/web` + `packages/*`, and a Laravel backend kept outside the 
 | [rbac.md](rbac.md) | Spatie Permission — install state + wiring steps |
 | [activity-log.md](activity-log.md) | Spatie Activitylog — install state + usage |
 | [modules.md](modules.md) | The planned `kit:install` preset/installer system |
-| [installer.md](installer.md) | The planned one-command installer (`pnpm create laravel-vue-starterkit`) + `pnpm setup` orchestrator |
+| [installer.md](installer.md) | The planned one-command installer (`pnpm create laravel-react-starterkit`) + `pnpm setup` orchestrator |
 | [roadmap.md](roadmap.md) | Ordered list of everything left to build |
 
 ## Conventions for these docs

@@ -1,9 +1,9 @@
-import { QueryClient } from '@tanstack/vue-query'
+import { QueryClient } from '@tanstack/react-query'
 import { isApiError } from '@/shared/lib/http'
 
 /**
- * The single app-wide QueryClient. Passed to `VueQueryPlugin` in `app/main.ts`; never construct
- * another one. Server state lives here — never in Pinia.
+ * The single app-wide QueryClient. Provided in `main.tsx` and passed to the router context; never
+ * construct another one. Server state — including the session user — lives here.
  */
 export const queryClient = new QueryClient({
   defaultOptions: {
