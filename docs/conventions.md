@@ -20,12 +20,12 @@ this captures the ones tooling can't enforce.
 
 Formatters:
 
-- **JS / TS / Vue / CSS / JSON** — Prettier (`pnpm format`).
+- **JS / TS / TSX / CSS / JSON** — Prettier (`pnpm format`).
 - **PHP** — Laravel Pint (`./vendor/bin/pint` from `backend/`).
 
 Linters:
 
-- **JS / TS / Vue** — `oxlint --fix` (fast) → `eslint --fix --cache` (richer).
+- **JS / TS / TSX** — ESLint (`pnpm lint`; base in `@app/config/eslint` with react-hooks + react-refresh).
 - **PHP** — Pint covers style; add PHPStan/Larastan if/when introduced.
 
 Run from root with `pnpm lint` and `pnpm format`. Don't fight the formatter.
@@ -55,15 +55,17 @@ Run from root with `pnpm lint` and `pnpm format`. Don't fight the formatter.
   `src/generated/` (re-exported).
 - Don't duplicate types in `apps/web` or in `backend/`. Lift shared types into `@app/types`.
 
-## Vue conventions
+## React conventions
 
-- `<script setup lang="ts">` SFCs only — Composition API. No Options API.
-- Client state → Pinia stores (setup-style), co-located with the owning feature. Server data → TanStack
-  Query composables, never Pinia.
+- Function components with hooks; named exports, PascalCase `.tsx` files. No default exports.
+- Server data (including the session user) → TanStack Query hooks in `features/<x>/hooks/`. Local UI
+  state → `useState`. No global client store unless real cross-component client state appears.
+- Pages are file routes under `src/routes/`; gate them with `staticData.permission`/`module`, never a
+  per-route `beforeLoad`.
 - Reusable UI → `@app/ui`, not `apps/web/src/components`. App-specific composition stays in the app.
 - Use the `cn()` helper from `@app/ui/lib/utils` for conditional classes.
-- API calls go through `@/shared/lib/http` inside Query composables — never `axios`/`http` directly in
-  a `.vue` component.
+- API calls go through `@/shared/lib/http` inside Query hooks — never `axios`/`http` directly in a
+  component.
 
 ## Laravel conventions
 

@@ -1,4 +1,4 @@
-// Shared TypeScript contract between the Vue frontend and the Laravel API.
+// Shared TypeScript contract between the React frontend and the Laravel API.
 // Hand-authored types live here; generated types live in ./generated and are re-exported.
 // Consumers always import from the package root: `import type { User } from '@app/types'`.
 

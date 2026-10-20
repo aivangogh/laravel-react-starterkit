@@ -19,7 +19,7 @@ Instead, report them privately via GitHub's security advisory feature:
 2. Click **Report a vulnerability** to open a private advisory.
 3. Include as much detail as possible: affected version, steps to reproduce, impact, and any suggested fix.
 
-Alternatively, you can email the maintainer at **dmncdlprt@gmail.com** with the subject line `[SECURITY] laravel-vue-starterkit`.
+Alternatively, you can email the maintainer at **dmncdlprt@gmail.com** with the subject line `[SECURITY] laravel-react-starterkit`.
 
 ### What to expect
 
@@ -30,4 +30,4 @@ Alternatively, you can email the maintainer at **dmncdlprt@gmail.com** with the 
 
 ### Scope
 
-This policy covers the code in this repository: the Laravel API (`backend/`), the Vue SPA (`apps/web/`), shared packages (`packages/`), and the `create-laravel-vue-starterkit` scaffolder published to npm. Vulnerabilities in upstream dependencies (Laravel, Vue, etc.) should be reported to their respective maintainers.
+This policy covers the code in this repository: the Laravel API (`backend/`), the React SPA (`apps/web/`), shared packages (`packages/`), and the `create-laravel-react-starterkit` scaffolder published to npm. Vulnerabilities in upstream dependencies (Laravel, React, etc.) should be reported to their respective maintainers.

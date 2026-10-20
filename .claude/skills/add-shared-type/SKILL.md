@@ -1,6 +1,6 @@
 ---
 name: add-shared-type
-description: Add a TypeScript type to the shared `@app/types` package (`packages/types`) and consume it from the Vue web app, instead of redeclaring backend shapes in the frontend. Use when a DTO, enum, or API contract surface is needed by both the Laravel response layer and the SPA.
+description: Add a TypeScript type to the shared `@app/types` package (`packages/types`) and consume it from the React web app, instead of redeclaring backend shapes in the frontend. Use when a DTO, enum, or API contract surface is needed by both the Laravel response layer and the SPA.
 ---
 
 # add-shared-type
@@ -31,7 +31,7 @@ one contract. The web app consumes it via the package — never by duplication.
 2. Add the type. Prefer `Paginated<NewType>` over redefining the envelope.
 3. If large/domain-specific, create a sibling file (e.g. `src/products.ts`) and re-export from
    `index.ts`.
-4. Consume it in `apps/web` (once it exists, Phase 5) via the package, never a relative path:
+4. Consume it in `apps/web` via the package, never a relative path:
    ```ts
    import type { User, Paginated } from '@app/types'
    ```

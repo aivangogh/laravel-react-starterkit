@@ -1,11 +1,11 @@
 ---
 name: sanctum-fortify-auth
-description: How first-party auth works in this repo — Laravel Fortify (headless actions) + Sanctum SPA cookie sessions — and how to add to, change, or test it. Use when touching login/register/logout, password reset, email verification, 2FA, CSRF/CORS, session config, the Vue auth store, or any `auth:sanctum`-protected route. Repo-specific; auth is wired and verified.
+description: How first-party auth works in this repo — Laravel Fortify (headless actions) + Sanctum SPA cookie sessions — and how to add to, change, or test it. Use when touching login/register/logout, password reset, email verification, 2FA, CSRF/CORS, session config, the SPA session user (`useUser` / `userQueryOptions`), or any `auth:sanctum`-protected route. Repo-specific; auth is wired and verified.
 ---
 
 # sanctum-fortify-auth
 
-The backend authenticates the decoupled Vue SPA with **Sanctum SPA cookie sessions**, and performs the
+The backend authenticates the decoupled React SPA with **Sanctum SPA cookie sessions**, and performs the
 auth *actions* (login, register, reset, verify, 2FA) with **headless Fortify**. No JWT; the session
 cookie carries auth. This is wired and verified end-to-end (CSRF → register → authenticated `/api/user`).
 
@@ -77,12 +77,20 @@ curl -s -c "$JAR" -b "$JAR" -H "Origin: $ORIGIN" -H "Accept: application/json" \
 curl -s -b "$JAR" -H "Origin: $ORIGIN" -H "Accept: application/json" "$BASE/api/user" -w "\n%{http_code}\n"  # 200
 ```
 
-## Frontend side (apps/web — Phase 5)
+## Frontend side (apps/web)
 
-When `apps/web` exists: a single axios instance (`src/shared/lib/http.ts`) with `withCredentials: true`
-calls `/sanctum/csrf-cookie` before the first mutating request; a Pinia `auth` store holds the user +
-`ready` flag (read synchronously by the router guard). See `docs/frontend.md` and the
-`frontend-architecture` skill.
+- A single axios instance (`src/shared/lib/http.ts`) with `withCredentials: true` + `withXSRFToken`;
+  auth mutations call `ensureCsrfCookie()` (`/sanctum/csrf-cookie`) before posting.
+- The session user is **TanStack Query state**, not a store: `userQueryOptions` (key
+  `authKeys.user()`, `GET /api/user`, 401/419 → `null`) in `src/features/auth/hooks/useAuth.ts`.
+  Components read it with `useUser()`; after a self-mutation call `useRefreshUser()`. Login/register
+  mutations refresh it; logout clears the whole query cache and sets it to `null`.
+- Route guards read the same cache: `routes/_app.tsx` (`ensureQueryData(userQueryOptions)`, redirect
+  to `/login?redirect=…`) and `routes/_guest.tsx` (logged-in visitors go to `/`).
+- `main.tsx` adds a response interceptor: a 401 mid-session clears the cache + user and re-runs the
+  guards (→ `/login`); a 419 resets the CSRF cookie so the next write re-primes it.
+
+See `docs/frontend.md` and the `frontend-architecture` skill.
 
 ## Don't
 

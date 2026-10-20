@@ -35,9 +35,9 @@ If a change spans two types, split it.
 
 | Scope | Covers |
 |---|---|
-| `web` | `apps/web/` — Vue SPA |
+| `web` | `apps/web/` — React SPA |
 | `backend` | `backend/` — Laravel app code |
-| `ui` | `packages/ui/` (`@app/ui`) — shadcn-vue components, tokens |
+| `ui` | `packages/ui/` (`@app/ui`) — shadcn/ui (Base UI) components, tokens |
 | `types` | `packages/types/` (`@app/types`) — shared TS types |
 | `config` | `packages/config/` (`@app/config`) — eslint/prettier/tsconfig bases |
 | `auth` | SPA↔Sanctum/Fortify flow (cookies, CSRF, guards) |

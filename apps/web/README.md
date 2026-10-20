@@ -1,7 +1,8 @@
-# `web` — Vue 3 SPA
+# `web` — React 19 SPA
 
-The decoupled frontend for the starter kit. Vue 3 + Vite, Pinia (client state) + TanStack Query
-(server state), Vue Router, Tailwind v4, and shadcn-vue primitives consumed from `@app/ui`.
+The decoupled frontend for the starter kit. React 19 + Vite, TanStack Router (file-based routes),
+TanStack Query (all server state, including the session user), Tailwind v4, and shadcn/ui (Base UI)
+primitives consumed from `@app/ui`.
 
 ## Setup
 
@@ -22,25 +23,27 @@ under `/api`.
 
 ## Layout
 
-Organized by feature: `src/app` (bootstrap), `src/shared` (cross-feature primitives — http client,
-query client/keys, permissions, `v-can`), `src/features/<f>` (self-contained features). Reusable UI
-lives in `@app/ui`, never here.
+Organized by feature: `src/main.tsx` + `src/router.tsx` (bootstrap), `src/routes` (file routes —
+`_app` is the authenticated shell + guard, `_guest` the logged-out pages; `routeTree.gen.ts` is
+generated), `src/shared` (cross-feature primitives — http client, query client/keys, permissions,
+`<Can>`, `FormField`), `src/features/<f>` (self-contained features: pages, hooks, components, tests).
+Reusable UI lives in `@app/ui`, never here. See [`docs/frontend.md`](../../docs/frontend.md).
 
 ## Scripts
 
 | Script                         | What                                        |
 | ------------------------------ | ------------------------------------------- |
 | `pnpm --filter web dev`        | Vite dev server                             |
-| `pnpm --filter web build`      | `vue-tsc --noEmit` then `vite build`        |
-| `pnpm --filter web type-check` | `vue-tsc --noEmit`                          |
+| `pnpm --filter web build`      | `vite build` then `tsc --noEmit`            |
+| `pnpm --filter web type-check` | `tsc --noEmit`                              |
 | `pnpm --filter web lint`       | ESLint (shared flat config)                 |
 | `pnpm --filter web format`     | Prettier                                    |
-| `pnpm --filter web test:unit`  | Vitest (jsdom)                              |
+| `pnpm --filter web test:unit`  | Vitest (jsdom) + React Testing Library      |
 | `pnpm --filter web test:e2e`   | Playwright (requires the API + SPA running) |
 
 ## Adding UI components
 
-shadcn-vue primitives land in `@app/ui`, not here:
+shadcn/ui primitives land in `@app/ui`, not here:
 
 ```bash
 pnpm --filter @app/ui ui:add button input label card alert

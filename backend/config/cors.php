@@ -7,7 +7,7 @@ return [
     | Cross-Origin Resource Sharing (CORS) Configuration
     |--------------------------------------------------------------------------
     |
-    | Allows the decoupled Vue SPA (FRONTEND_URL) to call the API and Fortify
+    | Allows the decoupled React SPA (FRONTEND_URL) to call the API and Fortify
     | auth endpoints with credentials (cookies). `supports_credentials` MUST be
     | true for Sanctum SPA cookie authentication to work.
     |

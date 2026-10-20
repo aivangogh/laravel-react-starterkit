@@ -18,15 +18,12 @@ Runs every linter, formatter, and type-checker the repo configures.
 From the repo root:
 
 1. `pnpm format` — Prettier across `apps/*` + `packages/*` (config base in `@app/config`).
-2. `pnpm lint` — each workspace's `lint` script. For `apps/web` (Phase 5) this is `oxlint --fix` then
-   `eslint --fix --cache`. The `@app/*` packages currently have no-op lint scripts until they hold
-   lintable source.
-3. `pnpm type-check` — `tsc`/`vue-tsc` across the workspace. `@app/types` runs real `tsc`.
+2. `pnpm lint` — each workspace's `lint` script. For `apps/web` this is `eslint .` (flat config built
+   on `@app/config/eslint`: typescript-eslint + `react-hooks` + `react-refresh`). Packages without
+   lintable source have no-op lint scripts.
+3. `pnpm type-check` — `tsc` across the workspace. `@app/types` runs real `tsc`.
 
 Scope to one workspace when only it changed: `pnpm --filter web lint && pnpm --filter web type-check`.
-
-> The `apps/*` filter prints "No projects matched" until `apps/web` exists (Phase 5). That's a notice,
-> not a failure.
 
 ## Backend (Laravel)
 
@@ -50,7 +47,6 @@ pnpm format && pnpm lint && pnpm type-check && (cd backend && ./vendor/bin/pint 
 ## Notes
 
 - Don't `--no-verify` commits if a hook fails — fix the cause.
-- oxlint runs before eslint intentionally (fast pass applies fixes, eslint refines). Don't reverse it.
-- If `vue-tsc`/`tsc` reports spurious errors, delete `*.tsbuildinfo` (gitignored) and rerun.
+- If `tsc` reports spurious errors, delete `*.tsbuildinfo` (gitignored) and rerun.
 - `.editorconfig` is authoritative: LF, final newline, 2-space default, 4-space PHP. `.gitattributes`
   normalizes line endings to LF — the `CRLF will be replaced by LF` warning on `git add` is safe.

@@ -7,10 +7,10 @@ first if you haven't run the stack yet.
 
 ```
             ┌──────────────────────────┐
-            │   apps/web  (Vue 3 SPA)  │
-            │  Vite · Pinia · Router   │
+            │  apps/web  (React 19 SPA)│
+            │  Vite · TanStack Router  │
             │  TanStack Query          │
-            │  Tailwind 4 · shadcn-vue │
+            │  Tailwind 4 · shadcn/ui  │
             └──────────┬───────────────┘
                        │   HTTP/JSON  (Sanctum cookie auth)
                        ▼
@@ -35,14 +35,16 @@ typed contract via `packages/types` (`@app/types`).
 
 ## Component responsibilities
 
-### `apps/web` — Vue 3 SPA
+### `apps/web` — React 19 SPA
 
-- Renders all UI; owns **client-side** state via Pinia and routing via Vue Router.
-- Owns **server-side** state via TanStack Query (`@tanstack/vue-query`) — not Pinia.
+- Renders all UI; file-based routing via TanStack Router (`src/routes/`), with one auth/permission
+  guard in `routes/_app.tsx` driven by each route's `staticData`.
+- Owns **all server state** — including the session user — via TanStack Query
+  (`@tanstack/react-query`). There is no separate client store.
 - Imports the design system from `@app/ui` (Vite path alias → `packages/ui/src`).
 - Talks to the Laravel API through a single Axios instance; types responses against `@app/types`.
-- Lints with **oxlint** (fast) → **eslint** (richer); formats with Prettier.
-- Tests: **Vitest** (unit/component), **Playwright** (e2e).
+- Lints with **ESLint** (typescript-eslint + react-hooks + react-refresh); formats with Prettier.
+- Tests: **Vitest** + React Testing Library (unit/component), **Playwright** (e2e).
 
 See [frontend.md](./frontend.md).
 
@@ -68,7 +70,8 @@ The interface between FE and BE. Two flavours:
 ### `packages/ui` — shared design system (`@app/ui`)
 
 - Source-only package — consumed via the `@app/ui` path alias, never built.
-- Houses **shadcn-vue** components (style `new-york`, base `neutral`, icons `lucide`).
+- Houses **shadcn/ui** components on Base UI (`@base-ui/react`; style `base-nova`, base `neutral`,
+  icons `lucide`) and the `DataTable` (`@tanstack/react-table`).
 - Add components with `pnpm --filter @app/ui ui:add <name>`.
 
 ### `packages/config` — shared config bases (`@app/config`)
